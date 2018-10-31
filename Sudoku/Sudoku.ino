@@ -19,11 +19,25 @@ void update() {
   else if (gb.buttons.pressed(BUTTON_DOWN)) {
     cursorY = (cursorY + 1) % 9;
   }
+
+  if (!sudoku.isFixed(cursorX, cursorY)) {
+    if (gb.buttons.pressed(BUTTON_A)) {
+      if (!sudoku.nextValue(cursorX, cursorY)) {
+        // TODO: Sfx
+      }
+    }
+    else if (gb.buttons.pressed(BUTTON_B)) {
+      if (sudoku.isSet(cursorX, cursorY)) {
+        sudoku.clear(cursorX, cursorY);
+      }
+    }
+  }
 }
 
 void setup() {
   gb.begin();
 
+  initConstraintTables();
   sudoku.init();
 }
 
