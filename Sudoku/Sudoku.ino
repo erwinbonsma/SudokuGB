@@ -28,7 +28,7 @@ void update() {
     }
     else if (gb.buttons.pressed(BUTTON_B)) {
       if (sudoku.isSet(cursorX, cursorY)) {
-        sudoku.clear(cursorX, cursorY);
+        sudoku.clearValue(cursorX, cursorY);
       }
     }
   }

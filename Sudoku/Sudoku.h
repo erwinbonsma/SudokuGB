@@ -3,6 +3,14 @@ void initConstraintTables();
 class SudokuCell {
   friend class Sudoku;
 
+  // Indices into constraint groups
+  int _x; // Column
+  int _y; // Row
+  int _b; // Block
+
+  // Index of cell
+  int _index;
+
 protected:
   int _colMask;
   int _rowMask;
@@ -11,7 +19,24 @@ protected:
   bool _fixed;
 
 public:
-  void init();
+  /* Mask that indicates what (bit) values are allowed.
+   */
+  int bitMask() { return _colMask & _rowMask & _blockMask; }
+
+  bool isBitAllowed(int bit);
+
+  int getBitValue() { return _value; }
+  int isSet() { return _value != 0; }
+  bool isFixed() { return _fixed; }
+
+  void init(int cellIndex);
+};
+
+enum class AutoSetResult : int {
+  AlreadySet,
+  CellUpdated,
+  MultipleOptions,
+  Stuck
 };
 
 class Sudoku {
@@ -23,29 +48,31 @@ class Sudoku {
 
   int _numFilled;
 
-protected:
-  int _getValue(int cellIndex) { return _cells[cellIndex]._value; }
-  int _isFixed(int cellIndex) { return _cells[cellIndex]._fixed; }
-  int _isSet(int cellIndex) { return _cells[cellIndex]._value != 0; }
-  bool _isAllowed(int cellIndex, int bit);
-  int _bit2value(int bit);
-
-  void _updateMasks(int cellIndex, int oldBit, int (*updateFun)(int, int));
-  void _clear(int cellIndex);
-  void _setValue(int cellIndex, int bit);
-  bool _nextValue(int cellIndex);
-
 public:
   void init();
 
+  // Getters
+  SudokuCell& cellAt(int x, int y) { return _cells[x + y * 9]; }
+  SudokuCell& cellAt(int cellIndex) { return _cells[cellIndex]; }
   int getValue(int x, int y);
   bool isFixed(int x, int y);
   bool isSet(int x, int y);
 
-  void clear(int x, int y);
+  // Setters
+  void clearValue(int x, int y);
   bool nextValue(int x, int y);
 
   void draw();
+
+  // Lower-level methods
+  void updateBitMasks(SudokuCell& cell, int oldBit, int (*updateFun)(int, int));
+  void clearValue(SudokuCell& cell);
+  void setBitValue(SudokuCell& cell, int bit);
+  bool nextValue(SudokuCell& cell);
+
+  /* Sets the given cell if it only has one allowed value and is not yet set.
+   */
+  AutoSetResult autoSet(SudokuCell& cell);
 };
 
 extern Sudoku sudoku;

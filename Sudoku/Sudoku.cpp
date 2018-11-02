@@ -41,17 +41,34 @@ int clearBit(int mask, int bit) {
   return (mask & ~bit);
 }
 
-void SudokuCell::init() {
+void SudokuCell::init(int cellIndex) {
   _value = 0;
   _fixed = false;
   _colMask = 511;
   _rowMask = 511;
   _blockMask = 511;
+
+  _index = cellIndex;
+  _x = _index % 9;
+  _y = (_index - _x) / 9;
+  _b = _x / 3 + 3 * (_y / 3);
+}
+
+bool SudokuCell::isBitAllowed(int bit) {
+  if (_fixed) {
+    return _value == bit;
+  }
+
+  return (
+    (_colMask & bit) != 0 &&
+    (_rowMask & bit) != 0 &&
+    (_blockMask & bit) != 0
+  );
 }
 
 void Sudoku::init() {
   for (int i = 0; i < 81; i++) {
-    _cells[i].init();
+    _cells[i].init(i);
   }
 
   for (int i = 0; i < 9; i++) {
@@ -63,7 +80,7 @@ void Sudoku::init() {
   _numFilled = 0;
 }
 
-int Sudoku::_bit2value(int bit) {
+int bitToValue(int bit) {
   int value = 0;
   while (bit > 0) {
     value++;
@@ -72,81 +89,59 @@ int Sudoku::_bit2value(int bit) {
   return value;
 }
 
-bool Sudoku::_isAllowed(int cellIndex, int bit) {
-  SudokuCell& cell = _cells[cellIndex];
-
-  if (cell._fixed) {
-    return cell._value == bit;
-  }
-
-  return (
-    (cell._colMask & bit) != 0 &&
-    (cell._rowMask & bit) != 0 &&
-    (cell._blockMask & bit) != 0
-  );
-}
-
-void Sudoku::_updateMasks(int cellIndex, int bit, int (*updateFun)(int, int)) {
-  int x = cellIndex % 9;
-  int y = (cellIndex - x) / 9;
-  int blk = x/3 + 3 * (y/3);
-
-  int* colIndices = colCells[x];
-  int* rowIndices = rowCells[y];
-  int* blockIndices = blockCells[blk];
+void Sudoku::updateBitMasks(SudokuCell& cell, int bit, int (*updateFun)(int, int)) {
+  int* colIndices = colCells[cell._x];
+  int* rowIndices = rowCells[cell._y];
+  int* blockIndices = blockCells[cell._b];
 
   for (int i = 0; i < 9; i++) {
     int ci = colIndices[i];
-    if (ci != cellIndex) {
-      SudokuCell& cell = _cells[ci];
-      cell._colMask = (*updateFun)(cell._colMask, bit);
+    if (ci != cell._index) {
+      SudokuCell& cell2 = _cells[ci];
+      cell2._colMask = (*updateFun)(cell2._colMask, bit);
     }
 
     ci = rowIndices[i];
-    if (ci != cellIndex) {
-      SudokuCell& cell = _cells[ci];
-      cell._rowMask = (*updateFun)(cell._rowMask, bit);
+    if (ci != cell._index) {
+      SudokuCell& cell2 = _cells[ci];
+      cell2._rowMask = (*updateFun)(cell2._rowMask, bit);
     }
 
     ci = blockIndices[i];
-    if (ci != cellIndex) {
-      SudokuCell& cell = _cells[ci];
-      cell._blockMask = (*updateFun)(cell._blockMask, bit);
+    if (ci != cell._index) {
+      SudokuCell& cell2 = _cells[ci];
+      cell2._blockMask = (*updateFun)(cell2._blockMask, bit);
     }
   }
 
-  //colMasks[
+  // TODO
 }
 
-void Sudoku::_clear(int cellIndex) {
-  SudokuCell& cell = _cells[cellIndex];
-
+void Sudoku::clearValue(SudokuCell& cell) {
   int oldBit = cell._value;
   assertTrue(oldBit > 0);
 
   _numFilled--;
   cell._value = 0;
 
-  _updateMasks(cellIndex, oldBit, &setBit);
+  updateBitMasks(cell, oldBit, &setBit);
 }
 
-void Sudoku::_setValue(int cellIndex, int bit) {
+void Sudoku::setBitValue(SudokuCell& cell, int bit) {
   assertTrue(bit != 0);
 
-  SudokuCell& cell = _cells[cellIndex];
-
-  if (cell._value != 0) {
-    _clear(cellIndex);
+  if (cell.isSet()) {
+    clearValue(cell);
   }
 
   _numFilled++;
   cell._value = bit;
 
-  _updateMasks(cellIndex, bit, clearBit);
+  updateBitMasks(cell, bit, clearBit);
 }
 
-bool Sudoku::_nextValue(int cellIndex) {
-  int bit = _getValue(cellIndex);
+bool Sudoku::nextValue(SudokuCell& cell) {
+  int bit = cell.getBitValue();
 
   for (int i = 0; i < 9; i++) {
     if (bit == 0) {
@@ -161,12 +156,12 @@ bool Sudoku::_nextValue(int cellIndex) {
 
     if (bit == 0) {
       // Can always clear
-      _clear(cellIndex);
+      clearValue(cell);
       return true;
     }
 
-    if (_isAllowed(cellIndex, bit)) {
-      _setValue(cellIndex, bit);
+    if (cell.isBitAllowed(bit)) {
+      setBitValue(cell, bit);
       return true;
     }
   }
@@ -175,24 +170,46 @@ bool Sudoku::_nextValue(int cellIndex) {
   return false;
 }
 
+AutoSetResult Sudoku::autoSet(SudokuCell& cell) {
+  if (cell.isSet()) {
+    return AutoSetResult::AlreadySet;
+  }
+
+  int m = cell.bitMask();
+  if (m == 0) {
+    return AutoSetResult::Stuck;
+  }
+
+  // Next evaluates to zero if only one bit was set
+  int chk = m & (m - 1);
+  if (chk != 0) {
+    // Multiple bits were set, so more than one value is allowed
+    return AutoSetResult::MultipleOptions;
+  }
+
+  // Only one value is possible
+  setBitValue(cell, m);
+  return AutoSetResult::CellUpdated;
+}
+
 int Sudoku::getValue(int x, int y) {
-  return _bit2value(_getValue(x + y * 9));
+  return bitToValue(cellAt(x, y).getBitValue());
 }
 
 bool Sudoku::isFixed(int x, int y) {
-  return _isFixed(x + y * 9);
+  return cellAt(x, y).isFixed();
 }
 
 bool Sudoku::isSet(int x, int y) {
-  return _isSet(x + y * 9);
+  return cellAt(x, y).isSet();
 }
 
-void Sudoku::clear(int x, int y) {
-  _clear(x + y * 9);
+void Sudoku::clearValue(int x, int y) {
+  clearValue(cellAt(x, y));
 }
 
 bool Sudoku::nextValue(int x, int y) {
-  return _nextValue(x + y * 9);
+  return nextValue(cellAt(x, y));
 }
 
 
