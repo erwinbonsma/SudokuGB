@@ -25,6 +25,11 @@ protected:
    */
   void strip1();
 
+  /* Second stripping phase. It clears all cells whose value is not required to
+   * ensure the solution remains unique.
+   */
+  void strip2();
+
 public:
   Stripper(Sudoku& sudoku, Solver& solver);
 

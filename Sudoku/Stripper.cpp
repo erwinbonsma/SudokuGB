@@ -1,3 +1,5 @@
+#include <Gamebuino-Meta.h>
+
 #include "Stripper.h"
 
 #include "Globals.h"
@@ -5,6 +7,8 @@
 
 Stripper::Stripper(Sudoku& sudoku, Solver& solver)
   : _s(sudoku), _solver(solver) {
+
+  assertTrue( &(_solver.sudoku()) == &_s );
 
   for (int i = 0; i < 81; i++) {
     _p[i] = i;
@@ -58,8 +62,38 @@ void Stripper::strip1() {
   }
 }
 
+void Stripper::strip2() {
+  for (int i = 0; i < 81; i++) {
+    SerialUSB.printf("strip2: %d\n", i);
+
+    SudokuCell& cell = _s.cellAt(_p[i]);
+    int bit0 = cell.getBitValue();
+    if (bit0 > 0) {
+      int bit = 1;
+      bool unique = true;
+      while (bit <= 256 && unique) {
+        if (bit != bit0 && cell.isBitAllowed(bit)) {
+          _s.setBitValue(cell, bit);
+          if (_solver.isSolvable()) {
+            unique = false;
+          }
+        }
+        bit <<= 1;
+      }
+      if (unique) {
+        SerialUSB.printf("strip2: Clearing %d\n", cell.index());
+        _s.clearValue(cell);
+      } else {
+        // Restore cell to its original value
+        _s.setBitValue(cell, bit0);
+      }
+    }
+  }
+}
+
 void Stripper::strip() {
   strip1();
+  strip2();
 }
 
 void Stripper::randomStrip() {

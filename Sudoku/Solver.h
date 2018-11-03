@@ -63,8 +63,11 @@ class Solver {
 public:
   Solver(Sudoku& s);
 
+  Sudoku& sudoku() { return _s; }
+
   bool solve();
   bool randomSolve();
+  bool isSolvable();
 };
 
 #endif
