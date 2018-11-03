@@ -3,7 +3,7 @@
 
 #include "Sudoku.h"
 
-//----------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 class Solver {
 
@@ -16,14 +16,17 @@ class Solver {
   // Stack of cell indices that were automatically set
   int _autoSetCells[81];
 
-  // Offsets that help to randomize the solve (mainly useful for generating puzzles)
+  // Offsets that help to randomize the solve (mainly useful for generating
+  // puzzles)
   int _offsets[81];
 
-  // Determines if the solver should restore the puzzle to its original position or not
+  // Determines if the solver should restore the puzzle to its original position
+  // or not
   bool _restore;
 
-  /* Invoked after a cell has been automatically set. It records the cell to enable
-   * backtracking. Furthermore, it checks if more cells can be automatically set.
+  /* Invoked after a cell has been automatically set. It records the cell to
+   * enable backtracking. Furthermore, it checks if more cells can be
+   * automatically set.
    *
    * Returns true when stuck to signal that backtracking is required.
    */
@@ -35,23 +38,23 @@ class Solver {
    */
   bool checkSingleValue(int cellIndex);
 
-  /* Checks for all values that are not yet filled in within a given group (row, column or
-   * block) if there is only possible cell that can be assigned this value. If so it sets
-   * this cell and continues the recursion
+  /* Checks for all values that are not yet filled in within a given group (row,
+   * column or block) if there is only possible cell that can be assigned this
+   * value. If so it sets this cell and continues the recursion
    *
    * Returns true when stuck to signal that backtracking is required.
    */
   bool checkSinglePosition(int mask, int* cellIndices);
 
-  /* Invoked after a cell has been set. It checks if from this other cells can be
-   * automatically set, and if so, does this.
+  /* Invoked after a cell has been set. It checks if from this other cells can
+   * be automatically set, and if so, does this.
    *
    * Returns true when stuck to signal that backtracking is required.
    */
   bool postSet(SudokuCell& cell);
 
-  /* Undos the last "num" cells that have been set automatically by checkSingleValue and
-   * checkSinglePosition.
+  /* Undos the last "num" cells that have been set automatically by
+   * checkSingleValue and checkSinglePosition.
    */
   void autoClear(int num);
 
