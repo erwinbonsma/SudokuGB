@@ -5,6 +5,9 @@
 #include "Globals.h"
 
 Solver::Solver(Sudoku& s) : _s(s) {
+  for (int i = 0; i < 81; i++) {
+    _offsets[i] = 0;
+  }
 }
 
 bool Solver::postAutoSet(SudokuCell& cell) {
@@ -113,8 +116,8 @@ bool Solver::solve(int n) {
 
   int i = 0;
   bool solved = false;
-  int bit = 1;
   int totalAutoSetBefore = _totalAutoSet;
+  int bit = 1 << _offsets[n];
   while (i < 9 && !solved) {
     if (cell.isBitAllowed(bit)) {
       SerialUSB.printf("%d = %d\n", n, bit);
@@ -138,6 +141,9 @@ bool Solver::solve(int n) {
 
     i++;
     bit <<= 1;
+    if (bit > 256) {
+      bit = 1;
+    }
   }
 
   return solved;
@@ -147,5 +153,12 @@ bool Solver::solve() {
   _restore = false;
   _totalAutoSet = 0;
   return solve(0);
+}
+
+bool Solver::randomSolve() {
+  for (int i = 0; i < 81; i++) {
+    _offsets[i] = rand() % 9;
+  }
+  return solve();
 }
 

@@ -16,6 +16,9 @@ class Solver {
   // Stack of cell indices that were automatically set
   int _autoSetCells[81];
 
+  // Offsets that help to randomize the solve (mainly useful for generating puzzles)
+  int _offsets[81];
+
   // Determines if the solver should restore the puzzle to its original position or not
   bool _restore;
 
@@ -58,6 +61,7 @@ public:
   Solver(Sudoku& s);
 
   bool solve();
+  bool randomSolve();
 };
 
 #endif

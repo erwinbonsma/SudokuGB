@@ -44,7 +44,7 @@ void setup() {
   initConstraintTables();
 
   sudokuForSolver.init();
-  assertTrue(solver.solve());
+  assertTrue(solver.randomSolve());
   sudoku.init(sudokuForSolver);
 }
 
