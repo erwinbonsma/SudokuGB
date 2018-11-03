@@ -4,30 +4,28 @@
 #include "Sudoku.h"
 #include "Utils.h"
 
-Sudoku sudoku;
-
 // Constraint tables
 int colCells[9][9];
 int rowCells[9][9];
-int blockCells[9][9];
+int boxCells[9][9];
 
 void initConstraintTables() {
   for (int i = 0; i < 9; i++) {
     int colIndex = i;
     int rowIndex = i * 9;
-    int blockIndex = 3 * (i % 3 + (i / 3) * 9);
+    int boxIndex = 3 * (i % 3 + (i / 3) * 9);
 
     for (int j = 0; j < 9; j++) {
       colCells[i][j] = colIndex;
       rowCells[i][j] = rowIndex;
-      blockCells[i][j] = blockIndex;
+      boxCells[i][j] = boxIndex;
 
       colIndex += 9;
       rowIndex += 1;
       if (j % 3 == 2) {
-        blockIndex += 7;
+        boxIndex += 7;
       } else {
-        blockIndex += 1;
+        boxIndex += 1;
       }
     }
   }
@@ -41,17 +39,30 @@ int clearBit(int mask, int bit) {
   return (mask & ~bit);
 }
 
+int bitToValue(int bit) {
+  int value = 0;
+  while (bit > 0) {
+    value++;
+    bit >>= 1;
+  }
+  return value;
+}
+
+int valueToBit(int value) {
+  return 1 << (value - 1);
+}
+
 void SudokuCell::init(int cellIndex) {
   _value = 0;
   _fixed = false;
   _colMask = 511;
   _rowMask = 511;
-  _blockMask = 511;
+  _boxMask = 511;
 
   _index = cellIndex;
-  _x = _index % 9;
-  _y = (_index - _x) / 9;
-  _b = _x / 3 + 3 * (_y / 3);
+  _col = _index % 9;
+  _row = (_index - _col) / 9;
+  _box = _col / 3 + 3 * (_row / 3);
 }
 
 bool SudokuCell::isBitAllowed(int bit) {
@@ -62,7 +73,7 @@ bool SudokuCell::isBitAllowed(int bit) {
   return (
     (_colMask & bit) != 0 &&
     (_rowMask & bit) != 0 &&
-    (_blockMask & bit) != 0
+    (_boxMask & bit) != 0
   );
 }
 
@@ -74,47 +85,55 @@ void Sudoku::init() {
   for (int i = 0; i < 9; i++) {
     _colMasks[i] = 511;
     _rowMasks[i] = 511;
-    _blockMasks[i] = 511;
+    _boxMasks[i] = 511;
   }
 
   _numFilled = 0;
 }
 
-int bitToValue(int bit) {
-  int value = 0;
-  while (bit > 0) {
-    value++;
-    bit >>= 1;
+void Sudoku::init(Sudoku& sudoku) {
+  init();
+
+  for (int i = 0; i < 81; i++) {
+    int bit = sudoku.cellAt(i).getBitValue();
+    if (bit != 0) {
+      setBitValue(_cells[i], bit);
+    }
   }
-  return value;
 }
 
 void Sudoku::updateBitMasks(SudokuCell& cell, int bit, int (*updateFun)(int, int)) {
-  int* colIndices = colCells[cell._x];
-  int* rowIndices = rowCells[cell._y];
-  int* blockIndices = blockCells[cell._b];
+  int* colIndices = colCells[cell.col()];
+  int* rowIndices = rowCells[cell.row()];
+  int* boxIndices = boxCells[cell.box()];
 
   for (int i = 0; i < 9; i++) {
     int ci = colIndices[i];
-    if (ci != cell._index) {
+    if (ci != cell.index()) {
       SudokuCell& cell2 = _cells[ci];
       cell2._colMask = (*updateFun)(cell2._colMask, bit);
     }
 
     ci = rowIndices[i];
-    if (ci != cell._index) {
+    if (ci != cell.index()) {
       SudokuCell& cell2 = _cells[ci];
       cell2._rowMask = (*updateFun)(cell2._rowMask, bit);
     }
 
-    ci = blockIndices[i];
-    if (ci != cell._index) {
+    ci = boxIndices[i];
+    if (ci != cell.index()) {
       SudokuCell& cell2 = _cells[ci];
-      cell2._blockMask = (*updateFun)(cell2._blockMask, bit);
+      cell2._boxMask = (*updateFun)(cell2._boxMask, bit);
     }
   }
 
-  // TODO
+  _colMasks[cell.col()] = (*updateFun)(_colMasks[cell.col()], bit);
+  _rowMasks[cell.row()] = (*updateFun)(_rowMasks[cell.row()], bit);
+  _boxMasks[cell.box()] = (*updateFun)(_boxMasks[cell.box()], bit);
+}
+
+void Sudoku::setValue(int x, int y, int value) {
+  setBitValue(cellAt(x, y), valueToBit(value));
 }
 
 void Sudoku::clearValue(SudokuCell& cell) {
@@ -188,6 +207,7 @@ AutoSetResult Sudoku::autoSet(SudokuCell& cell) {
   }
 
   // Only one value is possible
+  SerialUSB.printf("autoSet %d => %d (was: %d)\n", cell.index(), m, cell.getBitValue());
   setBitValue(cell, m);
   return AutoSetResult::CellUpdated;
 }

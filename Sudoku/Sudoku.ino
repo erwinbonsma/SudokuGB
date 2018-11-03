@@ -1,5 +1,6 @@
 #include <Gamebuino-Meta.h>
 
+#include "Utils.h"
 #include "Globals.h"
 #include "Sudoku.h"
 
@@ -37,8 +38,14 @@ void update() {
 void setup() {
   gb.begin();
 
+  SerialUSB.begin(9600);
+  while (!SerialUSB);
+
   initConstraintTables();
-  sudoku.init();
+
+  sudokuForSolver.init();
+  assertTrue(solver.solve());
+  sudoku.init(sudokuForSolver);
 }
 
 void loop() {

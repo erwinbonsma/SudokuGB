@@ -1,12 +1,15 @@
+#ifndef __SUDOKU_INCLUDED
+#define __SUDOKU_INCLUDED
+
 void initConstraintTables();
 
 class SudokuCell {
   friend class Sudoku;
 
   // Indices into constraint groups
-  int _x; // Column
-  int _y; // Row
-  int _b; // Block
+  int _col; // Column
+  int _row; // Row
+  int _box; // Box
 
   // Index of cell
   int _index;
@@ -14,20 +17,25 @@ class SudokuCell {
 protected:
   int _colMask;
   int _rowMask;
-  int _blockMask;
+  int _boxMask;
   int _value;
   bool _fixed;
 
 public:
   /* Mask that indicates what (bit) values are allowed.
    */
-  int bitMask() { return _colMask & _rowMask & _blockMask; }
+  int bitMask() { return _colMask & _rowMask & _boxMask; }
 
   bool isBitAllowed(int bit);
 
   int getBitValue() { return _value; }
-  int isSet() { return _value != 0; }
+  bool isSet() { return _value != 0; }
   bool isFixed() { return _fixed; }
+
+  int index() { return _index; }
+  int col() { return _col; }
+  int row() { return _row; }
+  int box() { return _box; }
 
   void init(int cellIndex);
 };
@@ -40,16 +48,19 @@ enum class AutoSetResult : int {
 };
 
 class Sudoku {
+  friend class Solver;
+
   SudokuCell _cells[81];
 
   int _colMasks[9];
   int _rowMasks[9];
-  int _blockMasks[9];
+  int _boxMasks[9];
 
   int _numFilled;
 
 public:
   void init();
+  void init(Sudoku& sudoku);
 
   // Getters
   SudokuCell& cellAt(int x, int y) { return _cells[x + y * 9]; }
@@ -59,6 +70,7 @@ public:
   bool isSet(int x, int y);
 
   // Setters
+  void setValue(int x, int y, int value);
   void clearValue(int x, int y);
   bool nextValue(int x, int y);
 
@@ -75,4 +87,4 @@ public:
   AutoSetResult autoSet(SudokuCell& cell);
 };
 
-extern Sudoku sudoku;
+#endif
