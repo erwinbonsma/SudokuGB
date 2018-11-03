@@ -34,6 +34,19 @@ void update() {
   }
 }
 
+void generateNewPuzzle() {
+  // Reset the puzzle
+  sudoku.init();
+
+  // Solve it to generate a (random) solution
+  assertTrue(solver.randomSolve());
+
+  // Now clear as many values as possible to create the actual puzzle
+  stripper.randomStrip();
+
+  sudoku.fixValues();
+}
+
 void setup() {
   gb.begin();
 
@@ -42,10 +55,7 @@ void setup() {
 
   initConstraintTables();
 
-  sudokuForSolver.init();
-  assertTrue(solver.randomSolve());
-  stripper.randomStrip();
-  sudoku.init(sudokuForSolver);
+  generateNewPuzzle();
 }
 
 void loop() {

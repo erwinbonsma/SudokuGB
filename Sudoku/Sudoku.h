@@ -33,6 +33,8 @@ public:
   bool isSet() { return _value != 0; }
   bool isFixed() { return _fixed; }
 
+  void fix() { _fixed = true; }
+
   int index() { return _index; }
   int col() { return _col; }
   int row() { return _row; }
@@ -78,6 +80,8 @@ public:
   void setValue(int x, int y, int value);
   void clearValue(int x, int y);
   bool nextValue(int x, int y);
+
+  void fixValues();
 
   void draw();
 

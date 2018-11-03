@@ -242,6 +242,14 @@ bool Sudoku::nextValue(int x, int y) {
   return nextValue(cellAt(x, y));
 }
 
+void Sudoku::fixValues() {
+  for (int i = 0; i < 81; i++) {
+    SudokuCell& cell = cellAt(i);
+    if (cell.isSet()) {
+      cell.fix();
+    }
+  }
+}
 
 void drawLines(int i) {
   gb.display.drawLine(8 + i * 7, 0, 8 + i * 7, 63);

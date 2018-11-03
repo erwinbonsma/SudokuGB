@@ -6,7 +6,6 @@ extern int cursorX;
 extern int cursorY;
 
 extern Sudoku sudoku;
-extern Sudoku sudokuForSolver;
 
 extern Solver solver;
 extern Stripper stripper;

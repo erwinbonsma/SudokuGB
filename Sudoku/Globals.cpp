@@ -1,8 +1,7 @@
 #include "Globals.h"
 
 Sudoku sudoku;
-Sudoku sudokuForSolver;
 
-Solver solver(sudokuForSolver);
-Stripper stripper(sudokuForSolver, solver);
+Solver solver(sudoku);
+Stripper stripper(sudoku, solver);
 
