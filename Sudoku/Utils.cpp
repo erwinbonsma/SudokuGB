@@ -2,6 +2,11 @@
 
 #include "Utils.h"
 
+void initDebugLog() {
+  SerialUSB.begin(9600);
+  while (!SerialUSB);
+}
+
 void permute(int* list, int len) {
   for (int i = 0; i < len; i++) {
     int j = i + rand() % (len - i);

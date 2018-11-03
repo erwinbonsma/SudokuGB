@@ -74,8 +74,9 @@ void update() {
 void setup() {
   gb.begin();
 
-  SerialUSB.begin(9600);
-  while (!SerialUSB);
+#ifdef DEVELOPMENT
+  initDebugLog();
+#endif
 
   initConstraintTables();
 

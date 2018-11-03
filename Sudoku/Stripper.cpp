@@ -64,7 +64,7 @@ void Stripper::strip1() {
 
 void Stripper::strip2() {
   for (int i = 0; i < 81; i++) {
-    SerialUSB.printf("strip2: %d\n", i);
+    debug("strip2: %d\n", i);
 
     SudokuCell& cell = _s.cellAt(_p[i]);
     int bit0 = cell.getBitValue();
@@ -81,7 +81,7 @@ void Stripper::strip2() {
         bit <<= 1;
       }
       if (unique) {
-        SerialUSB.printf("strip2: Clearing %d\n", cell.index());
+        debug("strip2: Clearing %d\n", cell.index());
         _s.clearValue(cell);
       } else {
         // Restore cell to its original value
