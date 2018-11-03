@@ -277,7 +277,7 @@ void Sudoku::draw() {
     drawLines(i);
   }
 
-  gb.display.setColor(DARKGRAY);
+  gb.display.setColor(BLUE);
   drawCell(cursorX, cursorY);
 
   for (int x = 0; x < 9; x++) {
@@ -286,7 +286,7 @@ void Sudoku::draw() {
         if (sudoku.isFixed(x, y)) {
           gb.display.setColor(WHITE);
         } else {
-          gb.display.setColor(BEIGE);
+          gb.display.setColor(LIGHTBLUE);
         }
         drawValue(x, y, getValue(x, y));
       }
