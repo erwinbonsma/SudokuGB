@@ -10,9 +10,6 @@ class Solver {
   // The puzzle to solve
   Sudoku& _s;
 
-  // Returns for each recursion level how many cells where automatically set
-  int _numAutoSet[81];
-
   // Returns the total cells that have been automatically set
   int _totalAutoSet;
 
@@ -21,9 +18,6 @@ class Solver {
 
   // Determines if the solver should restore the puzzle to its original position or not
   bool _restore;
-
-  // The recursion level (only guaranteed correct during recursive postSet invocation)
-  int _n;
 
   /* Invoked after a cell has been automatically set. It records the cell to enable
    * backtracking. Furthermore, it checks if more cells can be automatically set.
@@ -51,12 +45,12 @@ class Solver {
    *
    * Returns true when stuck to signal that backtracking is required.
    */
-  bool postSet(int n, SudokuCell& cell);
+  bool postSet(SudokuCell& cell);
 
-  /* Undos the values set automatically by checkSingleValue and checkSinglePosition this
-   * iteration.
+  /* Undos the last "num" cells that have been set automatically by checkSingleValue and
+   * checkSinglePosition.
    */
-  void autoClear(int n);
+  void autoClear(int num);
 
   bool solve(int n);
 

@@ -9,24 +9,20 @@ Solver::Solver(Sudoku& s) : _s(s) {
 
 bool Solver::postAutoSet(SudokuCell& cell) {
   // Record the cell that has been auto-set, to enable undo when backtracking
-  _autoSetCells[_totalAutoSet] = cell.index();
-  _totalAutoSet++;
-  _numAutoSet[_n]++;
+  _autoSetCells[_totalAutoSet++] = cell.index();
 
-  SerialUSB.printf("postAutoSet: n = %d, totalAutoSet = %d, cell = %d\n", _n, _totalAutoSet, cell.index());
+  SerialUSB.printf("postAutoSet: totalAutoSet = %d, cell = %d\n", _totalAutoSet, cell.index());
 
   // Recurse to maybe set more
-  return postSet(_n, cell);
+  return postSet(cell);
 }
 
-void Solver::autoClear(int n) {
-  while (_numAutoSet[n] > 0) {
-    SerialUSB.printf("autoClear: n = %d, totalAutoSet = %d, cell = %d\n", _n, _totalAutoSet, _s.cellAt(_autoSetCells[_totalAutoSet - 1]));
+void Solver::autoClear(int num) {
+  while (num > 0) {
+    SerialUSB.printf("autoClear: totalAutoSet = %d, cell = %d\n", _totalAutoSet, _s.cellAt(_autoSetCells[_totalAutoSet - 1]));
 
-    _totalAutoSet--;
-
-    _s.clearValue(_s.cellAt(_autoSetCells[_totalAutoSet]));
-    _numAutoSet[n]--;
+    _s.clearValue(_s.cellAt(_autoSetCells[--_totalAutoSet]));
+    num--;
   }
 }
 
@@ -76,10 +72,8 @@ bool Solver::checkSinglePosition(int mask, int* cellIndices) {
   return false;
 }
 
-bool Solver::postSet(int n, SudokuCell& cell) {
-  _n = n;
-
-  SerialUSB.printf("postSet: n = %d, cell = %d\n", n, cell.index());
+bool Solver::postSet(SudokuCell& cell) {
+  SerialUSB.printf("postSet: cell = %d\n", cell.index());
 
   int* colIndices = colCells[cell.col()];
   int* rowIndices = rowCells[cell.row()];
@@ -120,12 +114,13 @@ bool Solver::solve(int n) {
   int i = 0;
   bool solved = false;
   int bit = 1;
+  int totalAutoSetBefore = _totalAutoSet;
   while (i < 9 && !solved) {
     if (cell.isBitAllowed(bit)) {
       SerialUSB.printf("%d = %d\n", n, bit);
       _s.setBitValue(cell, bit);
 
-      bool stuck = postSet(n, cell);
+      bool stuck = postSet(cell);
       if (!stuck) {
         if (solve(n + 1)) {
           if (_restore) {
@@ -137,7 +132,7 @@ bool Solver::solve(int n) {
         }
       }
 
-      autoClear(n);
+      autoClear(_totalAutoSet - totalAutoSetBefore);
       _s.clearValue(cell);
     }
 
@@ -151,9 +146,6 @@ bool Solver::solve(int n) {
 bool Solver::solve() {
   _restore = false;
   _totalAutoSet = 0;
-  for (int i = 0; i < 81; i++) {
-    _numAutoSet[i] = 0;
-  }
   return solve(0);
 }
 
