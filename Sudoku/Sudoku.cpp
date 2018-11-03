@@ -251,6 +251,15 @@ void Sudoku::fixValues() {
   }
 }
 
+void Sudoku::resetValues() {
+  for (int i = 0; i < 81; i++) {
+    SudokuCell& cell = cellAt(i);
+    if (cell.isSet() && !cell.isFixed()) {
+      clearValue(cell);
+    }
+  }
+}
+
 void drawLines(int i) {
   gb.display.drawLine(8 + i * 7, 0, 8 + i * 7, 63);
   gb.display.drawLine(8, i * 7, 71, i * 7);

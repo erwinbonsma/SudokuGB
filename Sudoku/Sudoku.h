@@ -82,6 +82,7 @@ public:
   bool nextValue(int x, int y);
 
   void fixValues();
+  void resetValues();
 
   void draw();
 
