@@ -2,7 +2,6 @@
 
 #include "Utils.h"
 #include "Globals.h"
-#include "Sudoku.h"
 
 int cursorX = 4;
 int cursorY = 4;
@@ -45,6 +44,7 @@ void setup() {
 
   sudokuForSolver.init();
   assertTrue(solver.randomSolve());
+  stripper.strip();
   sudoku.init(sudokuForSolver);
 }
 

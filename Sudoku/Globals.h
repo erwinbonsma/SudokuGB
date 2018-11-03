@@ -1,5 +1,6 @@
 #include "Sudoku.h"
 #include "Solver.h"
+#include "Stripper.h"
 
 extern int cursorX;
 extern int cursorY;
@@ -8,6 +9,7 @@ extern Sudoku sudoku;
 extern Sudoku sudokuForSolver;
 
 extern Solver solver;
+extern Stripper stripper;
 
 // Constraint tables, implemented in Sudoku.cpp
 extern int colCells[9][9];

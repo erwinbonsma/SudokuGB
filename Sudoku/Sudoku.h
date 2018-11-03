@@ -27,6 +27,7 @@ public:
   int bitMask() { return _colMask & _rowMask & _boxMask; }
 
   bool isBitAllowed(int bit);
+  bool hasOneAllowedValue();
 
   int getBitValue() { return _value; }
   bool isSet() { return _value != 0; }
@@ -40,12 +41,16 @@ public:
   void init(int cellIndex);
 };
 
+//------------------------------------------------------------------------------
+
 enum class AutoSetResult : int {
   AlreadySet,
   CellUpdated,
   MultipleOptions,
   Stuck
 };
+
+//------------------------------------------------------------------------------
 
 class Sudoku {
   friend class Solver;

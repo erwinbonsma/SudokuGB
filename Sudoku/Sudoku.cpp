@@ -52,6 +52,9 @@ int valueToBit(int value) {
   return 1 << (value - 1);
 }
 
+//------------------------------------------------------------------------------
+// SudokuCell
+
 void SudokuCell::init(int cellIndex) {
   _value = 0;
   _fixed = false;
@@ -76,6 +79,15 @@ bool SudokuCell::isBitAllowed(int bit) {
     (_boxMask & bit) != 0
   );
 }
+
+bool SudokuCell::hasOneAllowedValue() {
+  int m = bitMask();
+  // Note: x & (x - 1) clears the right-most bit
+  return (m & (m - 1)) == 0;
+}
+
+//------------------------------------------------------------------------------
+// Sudoku
 
 void Sudoku::init() {
   for (int i = 0; i < 81; i++) {
@@ -200,9 +212,7 @@ AutoSetResult Sudoku::autoSet(SudokuCell& cell) {
   }
 
   // Next evaluates to zero if only one bit was set
-  int chk = m & (m - 1);
-  if (chk != 0) {
-    // Multiple bits were set, so more than one value is allowed
+  if (!cell.hasOneAllowedValue()) {
     return AutoSetResult::MultipleOptions;
   }
 
@@ -275,6 +285,4 @@ void Sudoku::draw() {
     }
   }
 }
-
-
 
