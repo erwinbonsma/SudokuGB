@@ -12,6 +12,9 @@ class Stripper {
 
   Solver& _solver;
 
+  // Permutation
+  int _p[81];
+
 protected:
   bool hasOnePosition(int bit, int* cellIndices);
 
@@ -26,6 +29,7 @@ public:
   Stripper(Sudoku& sudoku, Solver& solver);
 
   void strip();
+  void randomStrip();
 };
 
 #endif

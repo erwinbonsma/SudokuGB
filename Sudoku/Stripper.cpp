@@ -1,9 +1,14 @@
 #include "Stripper.h"
 
 #include "Globals.h"
+#include "Utils.h"
 
 Stripper::Stripper(Sudoku& sudoku, Solver& solver)
   : _s(sudoku), _solver(solver) {
+
+  for (int i = 0; i < 81; i++) {
+    _p[i] = i;
+  }
 }
 
 bool Stripper::hasOnePosition(int bit, int* cellIndices) {
@@ -43,7 +48,7 @@ void Stripper::clearIfOnlyAllowedPosition(SudokuCell& cell) {
 
 void Stripper::strip1() {
   for (int i = 0; i < 81; i++) {
-    SudokuCell& cell = _s.cellAt(i);
+    SudokuCell& cell = _s.cellAt(_p[i]);
     if (cell.hasOneAllowedValue()) {
       _s.clearValue(cell);
     }
@@ -55,5 +60,10 @@ void Stripper::strip1() {
 
 void Stripper::strip() {
   strip1();
+}
+
+void Stripper::randomStrip() {
+  permute(_p, 81);
+  strip();
 }
 

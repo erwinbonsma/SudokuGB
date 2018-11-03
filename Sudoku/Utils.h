@@ -1,6 +1,8 @@
 #ifndef __UTILS_INCLUDED
 #define __UTILS_INCLUDED
 
+void permute(int* list, int len);
+
 void assertFailed(const char *function, const char *file, int lineNo, const char *expression);
 
 #define assertTrue(condition) \

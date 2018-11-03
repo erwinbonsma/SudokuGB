@@ -2,6 +2,17 @@
 
 #include "Utils.h"
 
+void permute(int* list, int len) {
+  for (int i = 0; i < len; i++) {
+    int j = i + rand() % (len - i);
+    if (i != j) {
+      int v = list[i];
+      list[i] = list[j];
+      list[j] = v;
+    }
+  }
+}
+
 void assertFailed(const char *function, const char *file, int lineNo, const char *expression) {
   if (SerialUSB) {
     SerialUSB.println("=== ASSERT FAILED ===");

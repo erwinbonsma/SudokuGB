@@ -44,7 +44,7 @@ void setup() {
 
   sudokuForSolver.init();
   assertTrue(solver.randomSolve());
-  stripper.strip();
+  stripper.randomStrip();
   sudoku.init(sudokuForSolver);
 }
 
