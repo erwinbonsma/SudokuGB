@@ -77,6 +77,7 @@ public:
   int getValue(int x, int y);
   bool isFixed(int x, int y);
   bool isSet(int x, int y);
+  bool isSolved() { return _numFilled == numCells; }
 
   // Setters
   void setValue(int x, int y, int value);
