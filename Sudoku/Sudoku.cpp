@@ -5,17 +5,17 @@
 #include "Utils.h"
 
 // Constraint tables
-int colCells[9][9];
-int rowCells[9][9];
-int boxCells[9][9];
+int colCells[numConstraintGroups][constraintGroupSize];
+int rowCells[numConstraintGroups][constraintGroupSize];
+int boxCells[numConstraintGroups][constraintGroupSize];
 
 void initConstraintTables() {
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < numConstraintGroups; i++) {
     int colIndex = i;
-    int rowIndex = i * 9;
+    int rowIndex = i * numCols;
     int boxIndex = 3 * (i % 3 + (i / 3) * 9);
 
-    for (int j = 0; j < 9; j++) {
+    for (int j = 0; j < constraintGroupSize; j++) {
       colCells[i][j] = colIndex;
       rowCells[i][j] = rowIndex;
       boxCells[i][j] = boxIndex;
@@ -58,13 +58,13 @@ int valueToBit(int value) {
 void SudokuCell::init(int cellIndex) {
   _value = 0;
   _fixed = false;
-  _colMask = 511;
-  _rowMask = 511;
-  _boxMask = 511;
+  _colMask = maxBitMask;
+  _rowMask = maxBitMask;
+  _boxMask = maxBitMask;
 
   _index = cellIndex;
-  _col = _index % 9;
-  _row = (_index - _col) / 9;
+  _col = _index % numCols;
+  _row = (_index - _col) / numCols;
   _box = _col / 3 + 3 * (_row / 3);
 }
 
@@ -90,14 +90,14 @@ bool SudokuCell::hasOneAllowedValue() {
 // Sudoku
 
 void Sudoku::init() {
-  for (int i = 0; i < 81; i++) {
+  for (int i = 0; i < numCells; i++) {
     _cells[i].init(i);
   }
 
-  for (int i = 0; i < 9; i++) {
-    _colMasks[i] = 511;
-    _rowMasks[i] = 511;
-    _boxMasks[i] = 511;
+  for (int i = 0; i < numConstraintGroups; i++) {
+    _colMasks[i] = maxBitMask;
+    _rowMasks[i] = maxBitMask;
+    _boxMasks[i] = maxBitMask;
   }
 
   _numFilled = 0;
@@ -106,7 +106,7 @@ void Sudoku::init() {
 void Sudoku::init(Sudoku& sudoku) {
   init();
 
-  for (int i = 0; i < 81; i++) {
+  for (int i = 0; i < numCells; i++) {
     int bit = sudoku.cellAt(i).getBitValue();
     if (bit != 0) {
       setBitValue(_cells[i], bit);
@@ -119,7 +119,7 @@ void Sudoku::updateBitMasks(SudokuCell& cell, int bit, int (*updateFun)(int, int
   int* rowIndices = rowCells[cell.row()];
   int* boxIndices = boxCells[cell.box()];
 
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < constraintGroupSize; i++) {
     int ci = colIndices[i];
     if (ci != cell.index()) {
       SudokuCell& cell2 = _cells[ci];
@@ -174,11 +174,11 @@ void Sudoku::setBitValue(SudokuCell& cell, int bit) {
 bool Sudoku::nextValue(SudokuCell& cell) {
   int bit = cell.getBitValue();
 
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < numValues; i++) {
     if (bit == 0) {
       bit = 1;
     }
-    else if (bit == 256) {
+    else if (bit == maxBitValue) {
       bit = 0;
     }
     else {
@@ -243,7 +243,7 @@ bool Sudoku::nextValue(int x, int y) {
 }
 
 void Sudoku::fixValues() {
-  for (int i = 0; i < 81; i++) {
+  for (int i = 0; i < numCells; i++) {
     SudokuCell& cell = cellAt(i);
     if (cell.isSet()) {
       cell.fix();
@@ -252,7 +252,7 @@ void Sudoku::fixValues() {
 }
 
 void Sudoku::resetValues() {
-  for (int i = 0; i < 81; i++) {
+  for (int i = 0; i < numCells; i++) {
     SudokuCell& cell = cellAt(i);
     if (cell.isSet() && !cell.isFixed()) {
       clearValue(cell);
@@ -276,21 +276,21 @@ void drawValue(int x, int y, int value) {
 
 void Sudoku::draw() {
   gb.display.setColor(DARKGRAY);
-  for (int i = 0; i <= 9; i++) {
+  for (int i = 0; i <= numCols; i++) {
     if (i % 3 != 0) {
       drawLines(i);
     }
   }
   gb.display.setColor(GRAY);
-  for (int i = 0; i <= 9; i += 3) {
+  for (int i = 0; i <= numCols; i += 3) {
     drawLines(i);
   }
 
   gb.display.setColor(BLUE);
   drawCell(cursorX, cursorY);
 
-  for (int x = 0; x < 9; x++) {
-    for (int y = 0; y < 9; y++) {
+  for (int x = 0; x < numCols; x++) {
+    for (int y = 0; y < numRows; y++) {
       if (sudoku.isSet(x, y)) {
         if (sudoku.isFixed(x, y)) {
           gb.display.setColor(WHITE);

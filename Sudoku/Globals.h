@@ -11,7 +11,7 @@ extern Solver solver;
 extern Stripper stripper;
 
 // Constraint tables, implemented in Sudoku.cpp
-extern int colCells[9][9];
-extern int rowCells[9][9];
-extern int boxCells[9][9];
+extern int colCells[numConstraintGroups][constraintGroupSize];
+extern int rowCells[numConstraintGroups][constraintGroupSize];
+extern int boxCells[numConstraintGroups][constraintGroupSize];
 

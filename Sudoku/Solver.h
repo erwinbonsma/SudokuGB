@@ -14,11 +14,11 @@ class Solver {
   int _totalAutoSet;
 
   // Stack of cell indices that were automatically set
-  int _autoSetCells[81];
+  int _autoSetCells[numCells];
 
   // Offsets that help to randomize the solve (mainly useful for generating
   // puzzles)
-  int _offsets[81];
+  int _offsets[numCells];
 
   // Determines if the solver should restore the puzzle to its original position
   // or not

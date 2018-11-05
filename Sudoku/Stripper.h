@@ -13,7 +13,7 @@ class Stripper {
   Solver& _solver;
 
   // Permutation
-  int _p[81];
+  int _p[numCells];
 
 protected:
   bool hasOnePosition(int bit, int* cellIndices);

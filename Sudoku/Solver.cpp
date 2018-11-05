@@ -5,7 +5,7 @@
 #include "Globals.h"
 
 Solver::Solver(Sudoku& s) : _s(s) {
-  for (int i = 0; i < 81; i++) {
+  for (int i = 0; i < numCells; i++) {
     _offsets[i] = 0;
   }
 }
@@ -43,14 +43,14 @@ bool Solver::checkSingleValue(int cellIndex) {
 }
 
 bool Solver::checkSinglePosition(int mask, int* cellIndices) {
-  for (int bit = 1; bit < 512; bit *= 2) {
+  for (int bit = 1; bit <= maxBitValue; bit *= 2) {
     if ((mask & bit) > 0) {
       // Value not yet set in given group. Check possible positions
 
       int i = 0;
       int cnt = 0;
       int posIndex = -1;
-      while (i < 9 && cnt < 2) {
+      while (i < constraintGroupSize && cnt < 2) {
         int ci = cellIndices[i];
         SudokuCell& cell = _s.cellAt(ci);
         if (!cell.isSet() && cell.isBitAllowed(bit)
@@ -82,7 +82,7 @@ bool Solver::postSet(SudokuCell& cell) {
   int* rowIndices = rowCells[cell.row()];
   int* boxIndices = boxCells[cell.box()];
 
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < constraintGroupSize; i++) {
     if (
       checkSingleValue(colIndices[i]) ||
       checkSingleValue(rowIndices[i]) ||
@@ -104,7 +104,7 @@ bool Solver::postSet(SudokuCell& cell) {
 }
 
 bool Solver::solve(int n) {
-  if (n == 81) {
+  if (n == numCells) {
     return true; // Solved
   }
 
@@ -118,7 +118,7 @@ bool Solver::solve(int n) {
   bool solved = false;
   int totalAutoSetBefore = _totalAutoSet;
   int bit = 1 << _offsets[n];
-  while (i < 9 && !solved) {
+  while (i < numValues && !solved) {
     if (cell.isBitAllowed(bit)) {
       //SerialUSB.printf("%d = %d\n", n, bit);
       _s.setBitValue(cell, bit);
@@ -141,7 +141,7 @@ bool Solver::solve(int n) {
 
     i++;
     bit <<= 1;
-    if (bit > 256) {
+    if (bit > maxBitValue) {
       bit = 1;
     }
   }
@@ -156,8 +156,8 @@ bool Solver::solve() {
 }
 
 bool Solver::randomSolve() {
-  for (int i = 0; i < 81; i++) {
-    _offsets[i] = rand() % 9;
+  for (int i = 0; i < numCells; i++) {
+    _offsets[i] = rand() % numValues;
   }
   return solve();
 }

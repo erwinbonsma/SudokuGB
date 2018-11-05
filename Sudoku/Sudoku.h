@@ -1,6 +1,8 @@
 #ifndef __SUDOKU_INCLUDED
 #define __SUDOKU_INCLUDED
 
+#include "Constants.h"
+
 void initConstraintTables();
 
 class SudokuCell {
@@ -57,11 +59,11 @@ enum class AutoSetResult : int {
 class Sudoku {
   friend class Solver;
 
-  SudokuCell _cells[81];
+  SudokuCell _cells[numCells];
 
-  int _colMasks[9];
-  int _rowMasks[9];
-  int _boxMasks[9];
+  int _colMasks[numConstraintGroups];
+  int _rowMasks[numConstraintGroups];
+  int _boxMasks[numConstraintGroups];
 
   int _numFilled;
 
@@ -70,7 +72,7 @@ public:
   void init(Sudoku& sudoku);
 
   // Getters
-  SudokuCell& cellAt(int x, int y) { return _cells[x + y * 9]; }
+  SudokuCell& cellAt(int x, int y) { return _cells[x + y * numCols]; }
   SudokuCell& cellAt(int cellIndex) { return _cells[cellIndex]; }
   int getValue(int x, int y);
   bool isFixed(int x, int y);

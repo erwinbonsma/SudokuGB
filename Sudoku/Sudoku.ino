@@ -41,16 +41,16 @@ void mainMenu() {
 
 void update() {
   if (gb.buttons.pressed(BUTTON_LEFT)) {
-    cursorX = (cursorX + 8) % 9;
+    cursorX = (cursorX + numCols - 1) % numCols;
   }
   else if (gb.buttons.pressed(BUTTON_RIGHT)) {
-    cursorX = (cursorX + 1) % 9;
+    cursorX = (cursorX + 1) % numCols;
   }
   else if (gb.buttons.pressed(BUTTON_UP)) {
-    cursorY = (cursorY + 8) % 9;
+    cursorY = (cursorY + numRows - 1) % numRows;
   }
   else if (gb.buttons.pressed(BUTTON_DOWN)) {
-    cursorY = (cursorY + 1) % 9;
+    cursorY = (cursorY + 1) % numRows;
   }
 
   if (!sudoku.isFixed(cursorX, cursorY)) {

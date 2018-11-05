@@ -10,7 +10,7 @@ Stripper::Stripper(Sudoku& sudoku, Solver& solver)
 
   assertTrue( &(_solver.sudoku()) == &_s );
 
-  for (int i = 0; i < 81; i++) {
+  for (int i = 0; i < numCells; i++) {
     _p[i] = i;
   }
 }
@@ -18,7 +18,7 @@ Stripper::Stripper(Sudoku& sudoku, Solver& solver)
 bool Stripper::hasOnePosition(int bit, int* cellIndices) {
   int cnt = 0;
 
-  for (int i = 0; i < 9; i++) {
+  for (int i = 0; i < constraintGroupSize; i++) {
     if (_s.cellAt(cellIndices[i]).isBitAllowed(bit)) {
       cnt++;
       if (cnt > 1) {
@@ -51,7 +51,7 @@ void Stripper::clearIfOnlyAllowedPosition(SudokuCell& cell) {
 }
 
 void Stripper::strip1() {
-  for (int i = 0; i < 81; i++) {
+  for (int i = 0; i < numCells; i++) {
     SudokuCell& cell = _s.cellAt(_p[i]);
     if (cell.hasOneAllowedValue()) {
       _s.clearValue(cell);
@@ -63,7 +63,7 @@ void Stripper::strip1() {
 }
 
 void Stripper::strip2() {
-  for (int i = 0; i < 81; i++) {
+  for (int i = 0; i < numCells; i++) {
     debug("strip2: %d\n", i);
 
     SudokuCell& cell = _s.cellAt(_p[i]);
@@ -71,7 +71,7 @@ void Stripper::strip2() {
     if (bit0 > 0) {
       int bit = 1;
       bool unique = true;
-      while (bit <= 256 && unique) {
+      while (bit <= maxBitValue && unique) {
         if (bit != bit0 && cell.isBitAllowed(bit)) {
           _s.setBitValue(cell, bit);
           if (_solver.isSolvable()) {
@@ -97,7 +97,7 @@ void Stripper::strip() {
 }
 
 void Stripper::randomStrip() {
-  permute(_p, 81);
+  permute(_p, numCells);
   strip();
 }
 
