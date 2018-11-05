@@ -358,7 +358,7 @@ Color solveColorForLight(int x, int y) {
 
   for (int i = 0; i < 2; i++) {
     int intensityDelta = (solvedCount % 4);
-    if (i > 0) {
+    if (i == 0) {
       intensityDelta = 4 - intensityDelta;
     }
     for (int j = 0; j < 3; j++) {
