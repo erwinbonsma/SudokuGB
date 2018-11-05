@@ -14,8 +14,17 @@ void generateNewPuzzle() {
   // Solve it to generate a (random) solution
   assertTrue(solver.randomSolve());
 
+#ifdef DEVELOPMENT
+  // Near solve
+  int i = 0;
+  while (sudoku.cellAt(i).isFixed()) {
+    i++;
+  }
+  sudoku.clearValue(sudoku.cellAt(i));
+#else
   // Now clear as many values as possible to create the actual puzzle
   stripper.randomStrip();
+#endif
 
   sudoku.fixValues();
 }
@@ -76,6 +85,17 @@ void setup() {
 
 #ifdef DEVELOPMENT
   initDebugLog();
+
+  int gradientLightColors[8] = {
+    0x000000, 0x504d01, 0xa09a02, 0xf1e703,
+    0x000000, 0x293e55, 0x537caa, 0x7dbbff
+  };
+
+  for (int i = 0; i < 8; i++) {
+    int hex = gradientLightColors[i];
+    Color gbc = gb.createColor((hex >> 16) & 255, (hex >> 8) & 255, hex & 255);
+    SerialUSB.printf("0x%04x, ", gbc);
+  }
 #endif
 
   initConstraintTables();
@@ -88,6 +108,7 @@ void setup() {
 void loop() {
   while(!gb.update());
   gb.display.clear();
+  gb.lights.clear();
 
   if (generateNewPuzzleCountdown > 0) {
     generateNewPuzzleCountdown--;
