@@ -71,6 +71,17 @@ class Solver {
    */
   void autoClear(int num);
 
+  /* Tries to set any cells that can only have one value either because it can
+   * have no other values, or because it is the only cell in a specific
+   * constraint group that can have this value.
+   *
+   * This method can be called before the recursive solve starts in case there
+   * may be cells that can be automatically set. This can significantly speed
+   * up the solve time, especially when it becomes clear that the puzzle is not
+   * solvable.
+   */
+  bool initialAutoSet();
+
   // Returns "true" if the termination criterion has been reached.
   bool solve(int n);
 

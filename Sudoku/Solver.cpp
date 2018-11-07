@@ -103,6 +103,28 @@ bool Solver::postSet(SudokuCell& cell) {
   return false;
 }
 
+bool Solver::initialAutoSet() {
+  // Check if each cell still has allowed values
+  for (int i = 0; i < numCells; i++) {
+    if (checkSingleValue(i)) {
+      return true; // Stuck
+    }
+  }
+
+  // Checks if each value in a constraint group still has allowed positions
+  for (int i = 0; i < numConstraintGroups; i++) {
+    if (
+      checkSinglePosition(_s._colMasks[i], colCells[i]) ||
+      checkSinglePosition(_s._rowMasks[i], rowCells[i]) ||
+      checkSinglePosition(_s._boxMasks[i], boxCells[i])
+    ) {
+      return true; // Stuck
+    }
+  }
+
+  return false;
+}
+
 bool Solver::solve(int n) {
   if (n == numCells) {
     _numSolutionsFound++;
@@ -185,7 +207,11 @@ SolutionCount Solver::countSolutions() {
   _numSolutionsFound = 0;
   _totalAutoSet = 0;
 
-  solve(0);
+  if (!initialAutoSet()) {
+    solve(0);
+  }
+  // Clear cells set by autoSet()
+  autoClear(_totalAutoSet);
 
   switch (_numSolutionsFound) {
     case 0: return SolutionCount::None;
