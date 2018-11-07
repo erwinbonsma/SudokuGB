@@ -2,6 +2,7 @@
 
 #include "Utils.h"
 #include "Globals.h"
+#include "Drawing.h"
 
 int cursorX = 4;
 int cursorY = 4;
@@ -138,7 +139,7 @@ void loop() {
     gb.display.println("Generating puzzle");
   }
   else {
-    sudoku.draw();
+    draw(sudoku);
     update();
   }
 }
