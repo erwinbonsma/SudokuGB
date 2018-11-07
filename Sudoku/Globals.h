@@ -5,6 +5,8 @@
 extern int cursorX;
 extern int cursorY;
 
+extern SolutionCount solutionCount;
+
 extern Sudoku sudoku;
 
 extern Solver solver;

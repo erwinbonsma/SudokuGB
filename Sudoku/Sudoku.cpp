@@ -101,6 +101,7 @@ void Sudoku::init() {
   }
 
   _numFilled = 0;
+  _numFixed = 0;
 }
 
 void Sudoku::init(Sudoku& sudoku) {
@@ -246,7 +247,18 @@ void Sudoku::fixValues() {
   for (int i = 0; i < numCells; i++) {
     SudokuCell& cell = cellAt(i);
     if (cell.isSet()) {
-      cell.fix();
+      cell._fixed = true;
+      _numFixed++;
+    }
+  }
+}
+
+void Sudoku::unfixValues() {
+  for (int i = 0; i < numCells; i++) {
+    SudokuCell& cell = cellAt(i);
+    if (cell.isFixed()) {
+      cell._fixed = false;
+      _numFixed--;
     }
   }
 }

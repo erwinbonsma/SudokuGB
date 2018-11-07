@@ -35,8 +35,6 @@ public:
   bool isSet() { return _value != 0; }
   bool isFixed() { return _fixed; }
 
-  void fix() { _fixed = true; }
-
   int index() { return _index; }
   int col() { return _col; }
   int row() { return _row; }
@@ -66,6 +64,7 @@ class Sudoku {
   int _boxMasks[numConstraintGroups];
 
   int _numFilled;
+  int _numFixed;
 
 public:
   void init();
@@ -78,6 +77,7 @@ public:
   bool isFixed(int x, int y);
   bool isSet(int x, int y);
   bool isSolved() { return _numFilled == numCells; }
+  bool solveInProgress() { return _numFixed > 0 && _numFilled > 0; }
 
   // Setters
   void setValue(int x, int y, int value);
@@ -85,6 +85,7 @@ public:
   bool nextValue(int x, int y);
 
   void fixValues();
+  void unfixValues();
   void resetValues();
 
   void draw();

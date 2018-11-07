@@ -167,9 +167,16 @@ void draw(Sudoku& sudoku) {
         }
       }
       if (sudoku.isSet(x, y)) {
-        if (sudoku.isFixed(x, y)) {
+        if (solutionCount == SolutionCount::Multiple) {
+          gb.display.setColor(LIGHTGREEN);
+        }
+        else if (solutionCount == SolutionCount::None) {
+          gb.display.setColor(RED);
+        }
+        else if (sudoku.isFixed(x, y)) {
           gb.display.setColor(WHITE);
-        } else {
+        }
+        else {
           gb.display.setColor(LIGHTBLUE);
         }
         drawValue(x, y, sudoku.getValue(x, y));

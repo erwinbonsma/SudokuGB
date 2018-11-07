@@ -105,7 +105,8 @@ bool Solver::postSet(SudokuCell& cell) {
 
 bool Solver::solve(int n) {
   if (n == numCells) {
-    return true; // Solved
+    _numSolutionsFound++;
+    return (_numSolutionsFound == _numSolutionsToFind);
   }
 
   SudokuCell& cell = _s.cellAt(n);
@@ -115,10 +116,10 @@ bool Solver::solve(int n) {
   }
 
   int i = 0;
-  bool solved = false;
+  bool terminate = false;
   int totalAutoSetBefore = _totalAutoSet;
   int bit = 1 << _offsets[n];
-  while (i < numValues && !solved) {
+  while (i < numValues && !terminate) {
     if (cell.isBitAllowed(bit)) {
       //SerialUSB.printf("%d = %d\n", n, bit);
       _s.setBitValue(cell, bit);
@@ -127,7 +128,7 @@ bool Solver::solve(int n) {
       if (!stuck) {
         if (solve(n + 1)) {
           if (_restore) {
-            solved = true;
+            terminate = true;
           }
           else {
             return true;
@@ -146,11 +147,15 @@ bool Solver::solve(int n) {
     }
   }
 
-  return solved;
+  return terminate;
 }
 
 bool Solver::solve() {
+  // Solve mode
   _restore = false;
+  _numSolutionsToFind = 1;
+
+  _numSolutionsFound = 0;
   _totalAutoSet = 0;
   return solve(0);
 }
@@ -163,8 +168,30 @@ bool Solver::randomSolve() {
 }
 
 bool Solver::isSolvable() {
+  // Solve mode
   _restore = true;
+  _numSolutionsToFind = 1;
+
+  _numSolutionsFound = 0;
   _totalAutoSet = 0;
   return solve(0);
+}
+
+SolutionCount Solver::countSolutions() {
+  // Solve mode
+  _restore = true;
+  _numSolutionsToFind = 2;
+
+  _numSolutionsFound = 0;
+  _totalAutoSet = 0;
+
+  solve(0);
+
+  switch (_numSolutionsFound) {
+    case 0: return SolutionCount::None;
+    case 1: return SolutionCount::One;
+    case 2: return SolutionCount::Multiple;
+    default: assertTrue(false); return SolutionCount::Multiple;
+  }
 }
 

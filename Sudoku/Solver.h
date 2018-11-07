@@ -5,6 +5,14 @@
 
 //------------------------------------------------------------------------------
 
+enum class SolutionCount : int {
+  Multiple,
+  One,
+  None
+};
+
+//------------------------------------------------------------------------------
+
 class Solver {
 
   // The puzzle to solve
@@ -20,9 +28,14 @@ class Solver {
   // puzzles)
   int _offsets[numCells];
 
-  // Determines if the solver should restore the puzzle to its original position
+  // Specifies if the solver should restore the puzzle to its original position
   // or not
   bool _restore;
+
+  // Specifies many solutions the solver should find before terminating.
+  int _numSolutionsToFind;
+
+  int _numSolutionsFound;
 
   /* Invoked after a cell has been automatically set. It records the cell to
    * enable backtracking. Furthermore, it checks if more cells can be
@@ -58,6 +71,7 @@ class Solver {
    */
   void autoClear(int num);
 
+  // Returns "true" if the termination criterion has been reached.
   bool solve(int n);
 
 public:
@@ -68,6 +82,7 @@ public:
   bool solve();
   bool randomSolve();
   bool isSolvable();
+  SolutionCount countSolutions();
 };
 
 #endif

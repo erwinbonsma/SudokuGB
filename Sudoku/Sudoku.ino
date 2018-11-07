@@ -7,6 +7,8 @@
 int cursorX = 4;
 int cursorY = 4;
 int generateNewPuzzleCountdown;
+SolutionCount solutionCount;
+bool editingPuzzle = false;
 
 void generateNewPuzzle() {
   // Reset the puzzle
@@ -28,12 +30,23 @@ void generateNewPuzzle() {
 #endif
 
   sudoku.fixValues();
+  solutionCount = SolutionCount::One;
+  editingPuzzle = false;
+}
+
+void startEditPuzzle() {
+  // Clear puzzle
+  sudoku.init();
+  solutionCount = SolutionCount::Multiple;
+  editingPuzzle = true;
+
 }
 
 const char* menuEntries[] = {
   "Back to puzzle",
   "Reset puzzle",
-  "New puzzle"
+  "New puzzle",
+  "Edit puzzle"
 };
 
 void mainMenu() {
@@ -47,9 +60,15 @@ void mainMenu() {
     // so OK sound is not (too) abruptly aborted
     generateNewPuzzleCountdown = 10;
   }
+  else if (entry == 3) {
+    startEditPuzzle();
+  }
 }
 
-void update() {
+// Returns true if cursor did move.
+bool handleCursorMove() {
+  bool cursorMoved = true;
+
   if (gb.buttons.pressed(BUTTON_LEFT)) {
     cursorX = (cursorX + numCols - 1) % numCols;
   }
@@ -62,17 +81,71 @@ void update() {
   else if (gb.buttons.pressed(BUTTON_DOWN)) {
     cursorY = (cursorY + 1) % numRows;
   }
+  else {
+    cursorMoved = false;
+  }
 
-  if (!sudoku.isFixed(cursorX, cursorY)) {
-    if (gb.buttons.pressed(BUTTON_A)) {
-      if (!sudoku.nextValue(cursorX, cursorY)) {
+  return cursorMoved;
+}
+
+void checkPossibleSolutions() {
+  // Check how many solutions there are
+  SolutionCount newSolutionCount = solver.countSolutions();
+
+  // Did anything change?
+  if (newSolutionCount != solutionCount) {
+    if (
+      solutionCount == SolutionCount::Multiple &&
+      newSolutionCount == SolutionCount::One
+    ) {
+      sudoku.fixValues();
+    }
+    if (
+      solutionCount == SolutionCount::One &&
+      newSolutionCount == SolutionCount::Multiple
+    ) {
+      sudoku.unfixValues();
+    }
+    solutionCount = newSolutionCount;
+  }
+}
+
+// Returns true if cell value was changed
+bool handleCellChange() {
+  bool canUpdateCell = (
+    !sudoku.isFixed(cursorX, cursorY) ||
+    (editingPuzzle && !sudoku.solveInProgress())
+  );
+  bool canClearCell = sudoku.isSet(cursorX, cursorY) && (
+    canUpdateCell ||
+    (editingPuzzle && solutionCount == SolutionCount::None)
+  );
+
+  if (gb.buttons.pressed(BUTTON_A)) {
+    if (canUpdateCell) {
+      if (sudoku.nextValue(cursorX, cursorY)) {
+        return true;
+      } else {
         // TODO: Sfx
       }
     }
-    else if (gb.buttons.pressed(BUTTON_B)) {
-      if (sudoku.isSet(cursorX, cursorY)) {
-        sudoku.clearValue(cursorX, cursorY);
-      }
+  }
+  else if (gb.buttons.pressed(BUTTON_B)) {
+    if (canClearCell) {
+      sudoku.clearValue(cursorX, cursorY);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void update() {
+  handleCursorMove();
+
+  if (handleCellChange()) {
+    if (editingPuzzle && !sudoku.solveInProgress()) {
+      checkPossibleSolutions();
     }
   }
 
