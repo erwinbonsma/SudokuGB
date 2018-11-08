@@ -63,10 +63,13 @@ class Sudoku {
   int _rowMasks[numConstraintGroups];
   int _boxMasks[numConstraintGroups];
 
+  bool _autoFix;
+
+public:
+//TMP
   int _numFilled;
   int _numFixed;
 
-public:
   void init();
   void init(Sudoku& sudoku);
 
@@ -77,12 +80,14 @@ public:
   bool isFixed(int x, int y);
   bool isSet(int x, int y);
   bool isSolved() { return _numFilled == numCells; }
-  bool solveInProgress() { return _numFixed > 0 && _numFilled > 0; }
+  bool solveInProgress() { return _numFixed > 0 && _numFilled > _numFixed; }
 
   // Setters
   void setValue(int x, int y, int value);
   void clearValue(int x, int y);
   bool nextValue(int x, int y);
+
+  void setAutoFix(bool autoFix) { _autoFix = autoFix; }
 
   void fixValues();
   void unfixValues();

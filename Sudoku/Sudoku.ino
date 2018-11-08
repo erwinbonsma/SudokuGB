@@ -10,6 +10,10 @@ int generateNewPuzzleCountdown;
 SolutionCount solutionCount;
 bool editingPuzzle = false;
 
+void resetPuzzle() {
+  sudoku.resetValues();
+}
+
 void generateNewPuzzle() {
   // Reset the puzzle
   sudoku.init();
@@ -37,9 +41,9 @@ void generateNewPuzzle() {
 void startEditPuzzle() {
   // Clear puzzle
   sudoku.init();
+  sudoku.setAutoFix(true);
   solutionCount = SolutionCount::Multiple;
   editingPuzzle = true;
-
 }
 
 const char* menuEntries[] = {
@@ -53,7 +57,7 @@ void mainMenu() {
   uint8_t entry = gb.gui.menu("Main menu", menuEntries);
 
   if (entry == 1) {
-    sudoku.resetValues();
+    resetPuzzle();
   }
   else if (entry == 2) {
     // Initiate puzzle creation, but wait a few frames before generating puzzle,
@@ -86,28 +90,6 @@ bool handleCursorMove() {
   }
 
   return cursorMoved;
-}
-
-void checkPossibleSolutions() {
-  // Check how many solutions there are
-  SolutionCount newSolutionCount = solver.countSolutions();
-
-  // Did anything change?
-  if (newSolutionCount != solutionCount) {
-    if (
-      solutionCount == SolutionCount::Multiple &&
-      newSolutionCount == SolutionCount::One
-    ) {
-      sudoku.fixValues();
-    }
-    if (
-      solutionCount == SolutionCount::One &&
-      newSolutionCount == SolutionCount::Multiple
-    ) {
-      sudoku.unfixValues();
-    }
-    solutionCount = newSolutionCount;
-  }
 }
 
 // Returns true if cell value was changed
@@ -144,8 +126,11 @@ void update() {
   handleCursorMove();
 
   if (handleCellChange()) {
+    SerialUSB.printf("Solve in progress = %d (%d/%d)\n", sudoku.solveInProgress(), sudoku._numFilled, sudoku._numFixed);
     if (editingPuzzle && !sudoku.solveInProgress()) {
-      checkPossibleSolutions();
+      solutionCount = solver.countSolutions();
+      SerialUSB.printf("Solution count = %d\n", solutionCount);
+      sudoku.setAutoFix(solutionCount != SolutionCount::One);
     }
   }
 

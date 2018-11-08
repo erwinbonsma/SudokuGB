@@ -69,10 +69,6 @@ void SudokuCell::init(int cellIndex) {
 }
 
 bool SudokuCell::isBitAllowed(int bit) {
-  if (_fixed) {
-    return _value == bit;
-  }
-
   return (
     (_colMask & bit) != 0 &&
     (_rowMask & bit) != 0 &&
@@ -99,6 +95,8 @@ void Sudoku::init() {
     _rowMasks[i] = maxBitMask;
     _boxMasks[i] = maxBitMask;
   }
+
+  _autoFix = false;
 
   _numFilled = 0;
   _numFixed = 0;
@@ -156,11 +154,19 @@ void Sudoku::clearValue(SudokuCell& cell) {
   _numFilled--;
   cell._value = 0;
 
+  // Unusual, but can happen while puzzle is being edited
+  if (cell._fixed) {
+    cell._fixed = false;
+    _numFixed--;
+  }
+
   updateBitMasks(cell, oldBit, &setBit);
 }
 
 void Sudoku::setBitValue(SudokuCell& cell, int bit) {
   assertTrue(bit != 0);
+
+  bool wasFixed = cell._fixed;
 
   if (cell.isSet()) {
     clearValue(cell);
@@ -168,6 +174,10 @@ void Sudoku::setBitValue(SudokuCell& cell, int bit) {
 
   _numFilled++;
   cell._value = bit;
+  if (_autoFix || wasFixed) {
+    cell._fixed = true;
+    _numFixed++;
+  }
 
   updateBitMasks(cell, bit, clearBit);
 }
@@ -247,6 +257,7 @@ void Sudoku::fixValues() {
   for (int i = 0; i < numCells; i++) {
     SudokuCell& cell = cellAt(i);
     if (cell.isSet()) {
+      assertTrue(!cell._fixed);
       cell._fixed = true;
       _numFixed++;
     }
