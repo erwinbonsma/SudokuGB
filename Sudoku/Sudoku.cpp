@@ -249,6 +249,14 @@ void Sudoku::clearValue(int x, int y) {
   clearValue(cellAt(x, y));
 }
 
+void Sudoku::fixValue(int x, int y) {
+  SudokuCell& cell = cellAt(x, y);
+  assertTrue(!cell._fixed);
+
+  cell._fixed = true;
+  _numFixed++;
+}
+
 bool Sudoku::nextValue(int x, int y) {
   return nextValue(cellAt(x, y));
 }
@@ -283,3 +291,8 @@ void Sudoku::resetValues() {
   }
 }
 
+#ifdef DEVELOPMENT
+void Sudoku::dump() {
+  SerialUSB.printf("numFilled = %d, numFixed = %d\n", _numFilled, _numFixed);
+}
+#endif

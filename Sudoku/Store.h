@@ -1,0 +1,2 @@
+bool storePuzzle();
+bool loadPuzzle();

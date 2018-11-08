@@ -2,6 +2,7 @@
 #define __SUDOKU_INCLUDED
 
 #include "Constants.h"
+#include "Utils.h"
 
 void initConstraintTables();
 
@@ -84,9 +85,11 @@ public:
   // Setters
   void setValue(int x, int y, int value);
   void clearValue(int x, int y);
+  void fixValue(int x, int y);
   bool nextValue(int x, int y);
 
   void setAutoFix(bool autoFix) { _autoFix = autoFix; }
+  bool isAutoFixEnabled() { return _autoFix; }
 
   void fixValues();
   void unfixValues();
@@ -103,6 +106,10 @@ public:
   /* Sets the given cell if it only has one allowed value and is not yet set.
    */
   AutoSetResult autoSet(SudokuCell& cell);
+
+#ifdef DEVELOPMENT
+  void dump();
+#endif
 };
 
 #endif

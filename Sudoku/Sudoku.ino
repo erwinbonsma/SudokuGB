@@ -3,6 +3,7 @@
 #include "Utils.h"
 #include "Globals.h"
 #include "Drawing.h"
+#include "Store.h"
 
 int cursorX = 4;
 int cursorY = 4;
@@ -48,6 +49,8 @@ void createNewPuzzle() {
 
 const char* menuEntries[] = {
   "Back to puzzle",
+  "Save puzzle",
+  "Load puzzle",
   "Reset puzzle",
   "New puzzle",
   "Create puzzle"
@@ -56,16 +59,24 @@ const char* menuEntries[] = {
 void mainMenu() {
   uint8_t entry = gb.gui.menu("Main menu", menuEntries);
 
-  if (entry == 1) {
-    resetPuzzle();
-  }
-  else if (entry == 2) {
-    // Initiate puzzle creation, but wait a few frames before generating puzzle,
-    // so OK sound is not (too) abruptly aborted
-    generateNewPuzzleCountdown = 10;
-  }
-  else if (entry == 3) {
-    createNewPuzzle();
+  switch (entry) {
+    case 1:
+      storePuzzle();
+      break;
+    case 2:
+      loadPuzzle();
+      break;
+    case 3:
+      resetPuzzle();
+      break;
+    case 4:
+      // Initiate puzzle creation, but wait a few frames before generating puzzle,
+      // so OK sound is not (too) abruptly aborted
+      generateNewPuzzleCountdown = 10;
+      break;
+    case 5:
+      createNewPuzzle();
+      break;
   }
 }
 
@@ -104,6 +115,11 @@ bool handleCellChange() {
   );
 
   if (gb.buttons.pressed(BUTTON_A)) {
+#ifdef DEVELOPMENT
+    SerialUSB.printf("canUpdateCell = %d\n", canUpdateCell);
+    SerialUSB.printf("editingPuzzle = %d, solveInProgress = %d\n", editingPuzzle, sudoku.solveInProgress());
+    sudoku.dump();
+#endif
     if (canUpdateCell) {
       if (sudoku.nextValue(cursorX, cursorY)) {
         return true;
@@ -113,6 +129,7 @@ bool handleCellChange() {
     }
   }
   else if (gb.buttons.pressed(BUTTON_B)) {
+    SerialUSB.printf("canClearCell = %d\n", canClearCell);
     if (canClearCell) {
       sudoku.clearValue(cursorX, cursorY);
       return true;
@@ -126,6 +143,7 @@ void update() {
   handleCursorMove();
 
   if (handleCellChange()) {
+    SerialUSB.printf("cellChanged: solveInProgress = %d, solCount = %d\n", sudoku.solveInProgress(), solutionCount);
     if (editingPuzzle && !sudoku.solveInProgress()) {
       solutionCount = solver.countSolutions();
       sudoku.setAutoFix(solutionCount != SolutionCount::One);

@@ -4,6 +4,7 @@
 
 extern int cursorX;
 extern int cursorY;
+extern bool editingPuzzle;
 
 extern SolutionCount solutionCount;
 
