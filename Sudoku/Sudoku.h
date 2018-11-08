@@ -65,11 +65,10 @@ class Sudoku {
 
   bool _autoFix;
 
-public:
-//TMP
   int _numFilled;
   int _numFixed;
 
+public:
   void init();
   void init(Sudoku& sudoku);
 

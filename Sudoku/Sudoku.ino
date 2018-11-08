@@ -126,10 +126,8 @@ void update() {
   handleCursorMove();
 
   if (handleCellChange()) {
-    SerialUSB.printf("Solve in progress = %d (%d/%d)\n", sudoku.solveInProgress(), sudoku._numFilled, sudoku._numFixed);
     if (editingPuzzle && !sudoku.solveInProgress()) {
       solutionCount = solver.countSolutions();
-      SerialUSB.printf("Solution count = %d\n", solutionCount);
       sudoku.setAutoFix(solutionCount != SolutionCount::One);
     }
   }
