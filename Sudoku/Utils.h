@@ -2,7 +2,7 @@
 #define __UTILS_INCLUDED
 
 // Comment out next line to enable development features
-#define DEVELOPMENT
+//#define DEVELOPMENT
 
 void initDebugLog();
 
