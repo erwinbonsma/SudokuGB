@@ -38,7 +38,7 @@ void generateNewPuzzle() {
   editingPuzzle = false;
 }
 
-void startEditPuzzle() {
+void createNewPuzzle() {
   // Clear puzzle
   sudoku.init();
   sudoku.setAutoFix(true);
@@ -50,7 +50,7 @@ const char* menuEntries[] = {
   "Back to puzzle",
   "Reset puzzle",
   "New puzzle",
-  "Edit puzzle"
+  "Create puzzle"
 };
 
 void mainMenu() {
@@ -65,7 +65,7 @@ void mainMenu() {
     generateNewPuzzleCountdown = 10;
   }
   else if (entry == 3) {
-    startEditPuzzle();
+    createNewPuzzle();
   }
 }
 
