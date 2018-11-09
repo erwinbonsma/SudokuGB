@@ -12,8 +12,8 @@
 #include "Store.h"
 
 // Globals
-int cursorX = 4;
-int cursorY = 4;
+int cursorCol = 4;
+int cursorRow = 4;
 bool editingPuzzle = false;
 
 Sudoku sudoku;
@@ -101,16 +101,16 @@ bool handleCursorMove() {
   bool cursorMoved = true;
 
   if (gb.buttons.pressed(BUTTON_LEFT)) {
-    cursorX = (cursorX + numCols - 1) % numCols;
+    cursorCol = (cursorCol + numCols - 1) % numCols;
   }
   else if (gb.buttons.pressed(BUTTON_RIGHT)) {
-    cursorX = (cursorX + 1) % numCols;
+    cursorCol = (cursorCol + 1) % numCols;
   }
   else if (gb.buttons.pressed(BUTTON_UP)) {
-    cursorY = (cursorY + numRows - 1) % numRows;
+    cursorRow = (cursorRow + numRows - 1) % numRows;
   }
   else if (gb.buttons.pressed(BUTTON_DOWN)) {
-    cursorY = (cursorY + 1) % numRows;
+    cursorRow = (cursorRow + 1) % numRows;
   }
   else {
     cursorMoved = false;
@@ -122,10 +122,10 @@ bool handleCursorMove() {
 // Returns true if cell value was changed
 bool handleCellChange() {
   bool canUpdateCell = (
-    !sudoku.isFixed(cursorX, cursorY) ||
+    !sudoku.isFixed(cursorCol, cursorRow) ||
     (editingPuzzle && !sudoku.solveInProgress())
   );
-  bool canClearCell = sudoku.isSet(cursorX, cursorY) && (
+  bool canClearCell = sudoku.isSet(cursorCol, cursorRow) && (
     canUpdateCell ||
     (editingPuzzle && solutionCount == SolutionCount::None)
   );
@@ -137,7 +137,7 @@ bool handleCellChange() {
     sudoku.dump();
 #endif
     if (canUpdateCell) {
-      if (sudoku.nextValue(cursorX, cursorY)) {
+      if (sudoku.nextValue(cursorCol, cursorRow)) {
         return true;
       } else {
         // TODO: Sfx
@@ -147,7 +147,7 @@ bool handleCellChange() {
   else if (gb.buttons.pressed(BUTTON_B)) {
     debug("canClearCell = %d\n", canClearCell);
     if (canClearCell) {
-      sudoku.clearValue(cursorX, cursorY);
+      sudoku.clearValue(cursorCol, cursorRow);
       return true;
     }
   }

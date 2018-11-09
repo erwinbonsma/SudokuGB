@@ -168,7 +168,7 @@ void draw(Sudoku& sudoku) {
     solvedCount = 0;
 
     gb.display.setColor(BLUE);
-    drawCell(cursorX, cursorY);
+    drawCell(cursorCol, cursorRow);
   }
 
   if (solutionCount == SolutionCount::None) {

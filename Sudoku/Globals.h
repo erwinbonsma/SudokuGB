@@ -8,8 +8,8 @@
 #include "Solver.h"
 #include "Stripper.h"
 
-extern int cursorX;
-extern int cursorY;
+extern int cursorCol;
+extern int cursorRow;
 extern bool editingPuzzle;
 
 extern SolutionCount solutionCount;
