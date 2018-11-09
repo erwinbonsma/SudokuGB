@@ -135,6 +135,14 @@ void drawSolveLights() {
   }
 }
 
+void drawBlockedLights() {
+  for (int x = 0; x < 2; x++) {
+    for (int y = 0; y < 4; y++) {
+      gb.lights.drawPixel(x, y, RED);
+    }
+  }
+}
+
 void draw(Sudoku& sudoku) {
   gb.display.setColor(DARKGRAY);
   for (int i = 0; i <= numCols; i++) {
@@ -155,6 +163,10 @@ void draw(Sudoku& sudoku) {
 
     gb.display.setColor(BLUE);
     drawCell(cursorX, cursorY);
+  }
+
+  if (solutionCount == SolutionCount::None) {
+    drawBlockedLights();
   }
 
   for (int x = 0; x < numCols; x++) {
