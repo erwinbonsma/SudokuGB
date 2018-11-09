@@ -1,3 +1,9 @@
+/*
+ * Sudoku, a Gamebuino game
+ *
+ * Copyright 2018, Erwin Bonsma
+ */
+
 #include "Sudoku.h"
 #include "Solver.h"
 #include "Stripper.h"

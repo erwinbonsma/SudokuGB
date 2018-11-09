@@ -1,3 +1,9 @@
+/*
+ * Sudoku, a Gamebuino game
+ *
+ * Copyright 2018, Erwin Bonsma
+ */
+
 #include <Gamebuino-Meta.h>
 
 #include "Utils.h"
@@ -5,11 +11,19 @@
 #include "Drawing.h"
 #include "Store.h"
 
+// Globals
 int cursorX = 4;
 int cursorY = 4;
-int generateNewPuzzleCountdown;
-SolutionCount solutionCount;
 bool editingPuzzle = false;
+
+Sudoku sudoku;
+
+Solver solver(sudoku);
+Stripper stripper(sudoku, solver);
+SolutionCount solutionCount;
+
+// Locals
+int generateNewPuzzleCountdown;
 
 void resetPuzzle() {
   sudoku.resetValues();

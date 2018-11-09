@@ -1,3 +1,9 @@
+/*
+ * Sudoku, a Gamebuino game
+ *
+ * Copyright 2018, Erwin Bonsma
+ */
+
 #ifndef __SOLVER_INCLUDED
 #define __SOLVER_INCLUDED
 

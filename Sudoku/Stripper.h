@@ -1,3 +1,9 @@
+/*
+ * Sudoku, a Gamebuino game
+ *
+ * Copyright 2018, Erwin Bonsma
+ */
+
 #ifndef __STRIPPER_INCLUDED
 #define __STRIPPER_INCLUDED
 
@@ -6,6 +12,9 @@
 
 //------------------------------------------------------------------------------
 
+/* Clears values from a Sudoku that are not needed to ensure it has a unique
+ * solution until no more values can be cleared.
+ */
 class Stripper {
   // The puzzle to strip
   Sudoku& _s;
