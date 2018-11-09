@@ -61,7 +61,9 @@ void mainMenu() {
 
   switch (entry) {
     case 1:
-      storePuzzle();
+      if (storePuzzle()) {
+        gb.gui.popup("Puzzle saved", 40);
+      }
       break;
     case 2:
       loadPuzzle();
