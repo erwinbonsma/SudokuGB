@@ -228,7 +228,7 @@ AutoSetResult Sudoku::autoSet(SudokuCell& cell) {
   }
 
   // Only one value is possible
-  //SerialUSB.printf("autoSet %d => %d (was: %d)\n", cell.index(), m, cell.getBitValue());
+  //debug("autoSet %d => %d (was: %d)\n", cell.index(), m, cell.getBitValue());
   setBitValue(cell, m);
   return AutoSetResult::CellUpdated;
 }
@@ -293,6 +293,6 @@ void Sudoku::resetValues() {
 
 #ifdef DEVELOPMENT
 void Sudoku::dump() {
-  SerialUSB.printf("numFilled = %d, numFixed = %d\n", _numFilled, _numFixed);
+  debug("numFilled = %d, numFixed = %d\n", _numFilled, _numFixed);
 }
 #endif

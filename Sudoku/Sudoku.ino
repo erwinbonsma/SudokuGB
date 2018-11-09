@@ -118,8 +118,8 @@ bool handleCellChange() {
 
   if (gb.buttons.pressed(BUTTON_A)) {
 #ifdef DEVELOPMENT
-    SerialUSB.printf("canUpdateCell = %d\n", canUpdateCell);
-    SerialUSB.printf("editingPuzzle = %d, solveInProgress = %d\n", editingPuzzle, sudoku.solveInProgress());
+    debug("canUpdateCell = %d\n", canUpdateCell);
+    debug("editingPuzzle = %d, solveInProgress = %d\n", editingPuzzle, sudoku.solveInProgress());
     sudoku.dump();
 #endif
     if (canUpdateCell) {
@@ -131,7 +131,7 @@ bool handleCellChange() {
     }
   }
   else if (gb.buttons.pressed(BUTTON_B)) {
-    SerialUSB.printf("canClearCell = %d\n", canClearCell);
+    debug("canClearCell = %d\n", canClearCell);
     if (canClearCell) {
       sudoku.clearValue(cursorX, cursorY);
       return true;
@@ -145,7 +145,7 @@ void update() {
   handleCursorMove();
 
   if (handleCellChange()) {
-    SerialUSB.printf("cellChanged: solveInProgress = %d, solCount = %d\n", sudoku.solveInProgress(), solutionCount);
+    debug("cellChanged: solveInProgress = %d, solCount = %d\n", sudoku.solveInProgress(), solutionCount);
     if (editingPuzzle && !sudoku.solveInProgress()) {
       solutionCount = solver.countSolutions();
       sudoku.setAutoFix(solutionCount != SolutionCount::One);
@@ -188,6 +188,7 @@ void setup() {
     Color gbc = gb.createColor((hex >> 16) & 255, (hex >> 8) & 255, hex & 255);
     SerialUSB.printf("0x%04x, ", gbc);
   }
+  SerialUSB.printf("\n");
 #endif
 
   initConstraintTables();

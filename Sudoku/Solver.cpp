@@ -14,7 +14,7 @@ bool Solver::postAutoSet(SudokuCell& cell) {
   // Record the cell that has been auto-set, to enable undo when backtracking
   _autoSetCells[_totalAutoSet++] = cell.index();
 
-  //SerialUSB.printf("postAutoSet: totalAutoSet = %d, cell = %d\n", _totalAutoSet, cell.index());
+  //debug("postAutoSet: totalAutoSet = %d, cell = %d\n", _totalAutoSet, cell.index());
 
   // Recurse to maybe set more
   return postSet(cell);
@@ -22,7 +22,7 @@ bool Solver::postAutoSet(SudokuCell& cell) {
 
 void Solver::autoClear(int num) {
   while (num > 0) {
-    //SerialUSB.printf("autoClear: totalAutoSet = %d, cell = %d\n", _totalAutoSet, _s.cellAt(_autoSetCells[_totalAutoSet - 1]));
+    //debug("autoClear: totalAutoSet = %d, cell = %d\n", _totalAutoSet, _s.cellAt(_autoSetCells[_totalAutoSet - 1]));
 
     _s.clearValue(_s.cellAt(_autoSetCells[--_totalAutoSet]));
     num--;
@@ -34,7 +34,7 @@ bool Solver::checkSingleValue(int cellIndex) {
   AutoSetResult result = _s.autoSet(cell);
 
   if (result == AutoSetResult::CellUpdated) {
-    //SerialUSB.printf("Autoset 1-val: %d = %d\n", cellIndex, cell.getBitValue());
+    //debug("Autoset 1-val: %d = %d\n", cellIndex, cell.getBitValue());
     return postAutoSet(cell);
   }
 
@@ -65,7 +65,7 @@ bool Solver::checkSinglePosition(int mask, int* cellIndices) {
       }
       if (cnt == 1) {
         SudokuCell& cell = _s.cellAt(posIndex);
-        //SerialUSB.printf("Autoset 1-pos: %d = %d\n", posIndex, bit);
+        //debug("Autoset 1-pos: %d = %d\n", posIndex, bit);
         _s.setBitValue(cell, bit);
         return postAutoSet(cell);
       }
@@ -76,7 +76,7 @@ bool Solver::checkSinglePosition(int mask, int* cellIndices) {
 }
 
 bool Solver::postSet(SudokuCell& cell) {
-  //SerialUSB.printf("postSet: cell = %d\n", cell.index());
+  //debug("postSet: cell = %d\n", cell.index());
 
   int* colIndices = colCells[cell.col()];
   int* rowIndices = rowCells[cell.row()];
@@ -143,7 +143,7 @@ bool Solver::solve(int n) {
   int bit = 1 << _offsets[n];
   while (i < numValues && !terminate) {
     if (cell.isBitAllowed(bit)) {
-      //SerialUSB.printf("%d = %d\n", n, bit);
+      //debug("%d = %d\n", n, bit);
       _s.setBitValue(cell, bit);
 
       bool stuck = postSet(cell);
