@@ -234,7 +234,6 @@ AutoSetResult Sudoku::autoSet(SudokuCell& cell) {
   }
 
   // Only one value is possible
-  //debug("autoSet %d => %d (was: %d)\n", cell.index(), m, cell.getBitValue());
   setBitValue(cell, m);
   return AutoSetResult::CellUpdated;
 }

@@ -70,8 +70,6 @@ void Stripper::strip1() {
 
 void Stripper::strip2() {
   for (int i = 0; i < numCells; i++) {
-    debug("strip2: %d\n", i);
-
     SudokuCell& cell = _s.cellAt(_p[i]);
     int bit0 = cell.getBitValue();
     if (bit0 > 0) {
@@ -87,7 +85,6 @@ void Stripper::strip2() {
         bit <<= 1;
       }
       if (unique) {
-        debug("strip2: Clearing %d\n", cell.index());
         _s.clearValue(cell);
       } else {
         // Restore cell to its original value
