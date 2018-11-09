@@ -24,6 +24,21 @@ SolutionCount solutionCount;
 
 // Locals
 int generateNewPuzzleCountdown;
+bool wasSolved = false;
+
+const Gamebuino_Meta::Sound_FX sfxNoValue[] = {
+  { Gamebuino_Meta::Sound_FX_Wave::SQUARE, 0, 128, 0, 0, 75, 2 }
+};
+
+const Gamebuino_Meta::Sound_FX sfxSolved[] = {
+  { Gamebuino_Meta::Sound_FX_Wave::SQUARE, 1, 127, 0, 0, 60, 3 },
+  { Gamebuino_Meta::Sound_FX_Wave::NOISE, 1, 0, 0, 0, 0, 1 },
+  { Gamebuino_Meta::Sound_FX_Wave::SQUARE, 1, 127, 0, 0, 56, 3 },
+  { Gamebuino_Meta::Sound_FX_Wave::NOISE, 1, 0, 0, 0, 0, 1 },
+  { Gamebuino_Meta::Sound_FX_Wave::SQUARE, 1, 127, 0, 0, 56, 3 },
+  { Gamebuino_Meta::Sound_FX_Wave::NOISE, 1, 0, 0, 0, 0, 1 },
+  { Gamebuino_Meta::Sound_FX_Wave::SQUARE, 0, 170, -2, 0, 50, 9 }
+};
 
 void resetPuzzle() {
   sudoku.resetValues();
@@ -36,7 +51,7 @@ void generateNewPuzzle() {
   // Solve it to generate a (random) solution
   assertTrue(solver.randomSolve());
 
-#ifdef DEVELOPMENT
+#ifdef DEVELOPMENT_OLD
   // Near solve
   int i = 0;
   while (sudoku.cellAt(i).isFixed()) {
@@ -140,7 +155,7 @@ bool handleCellChange() {
       if (sudoku.nextValue(cursorCol, cursorRow)) {
         return true;
       } else {
-        // TODO: Sfx
+        gb.sound.fx(sfxNoValue);
       }
     }
   }
@@ -169,6 +184,11 @@ void update() {
   if (gb.buttons.pressed(BUTTON_MENU)) {
     mainMenu();
   }
+
+  if (sudoku.isSolved() && !wasSolved) {
+    gb.sound.fx(sfxSolved);
+  }
+  wasSolved = sudoku.isSolved();
 }
 
 void setup() {
