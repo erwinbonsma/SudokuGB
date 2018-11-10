@@ -37,20 +37,20 @@ bool Stripper::hasOnePosition(int bit, int* cellIndices) {
 }
 
 void Stripper::clearIfOnlyAllowedPosition(SudokuCell& cell) {
-  int* colIndices = colCells[cell.col()];
-  int* rowIndices = rowCells[cell.row()];
-  int* boxIndices = boxCells[cell.box()];
-
   int bit = cell.getBitValue();
+
   // Try clearing value
   _s.clearValue(cell);
 
-  // Check if there's only one position for any of the constraints
-  if (!(
-    hasOnePosition(bit, colIndices) ||
-    hasOnePosition(bit, rowIndices) ||
-    hasOnePosition(bit, boxIndices)
-  )) {
+  bool onePos = false;
+  for (int i = 0; i < numConstraintsPerCell; i++) {
+    int groupIndex = cell._constraintGroup[i];
+    if (hasOnePosition(bit, constraintCells[groupIndex])) {
+      onePos = true;
+    }
+  }
+
+  if (!onePos) {
     // Undo clear
     _s.setBitValue(cell, bit);
   }

@@ -14,26 +14,27 @@ void initConstraintTables();
 
 class SudokuCell {
   friend class Sudoku;
-
-  // Indices into constraint groups
-  int _col; // Column
-  int _row; // Row
-  int _box; // Box
+  friend class Solver;
+  friend class Stripper;
 
   // Index of cell
   int _index;
 
 protected:
-  int _colMask;
-  int _rowMask;
-  int _boxMask;
   int _value;
   bool _fixed;
+
+  // The constraint groups that this cell is part of
+  int _constraintGroup[numConstraintsPerCell];
+
+  // Tracks the allowed values for this cell for each constraint group that
+  // contains this cell.
+  int _constraintMask[numConstraintsPerCell];
 
 public:
   /* Mask that indicates what (bit) values are allowed.
    */
-  int bitMask() { return _colMask & _rowMask & _boxMask; }
+  int bitMask();
 
   bool isBitAllowed(int bit);
   bool hasOneAllowedValue();
@@ -43,9 +44,6 @@ public:
   bool isFixed() { return _fixed; }
 
   int index() { return _index; }
-  int col() { return _col; }
-  int row() { return _row; }
-  int box() { return _box; }
 
   void init(int cellIndex);
 };
@@ -66,9 +64,8 @@ class Sudoku {
 
   SudokuCell _cells[numCells];
 
-  int _colMasks[numConstraintGroups];
-  int _rowMasks[numConstraintGroups];
-  int _boxMasks[numConstraintGroups];
+  // Checks for each constraint group the values that still need to be filled.
+  int _constraintMask[numConstraintGroups];
 
   bool _autoFix;
 

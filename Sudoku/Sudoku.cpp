@@ -11,29 +11,43 @@
 #include "Utils.h"
 
 // Constraint tables
-int colCells[numConstraintGroups][constraintGroupSize];
-int rowCells[numConstraintGroups][constraintGroupSize];
-int boxCells[numConstraintGroups][constraintGroupSize];
+int constraintCells[numConstraintGroups][constraintGroupSize];
 
 void initConstraintTables() {
-  for (int i = 0; i < numConstraintGroups; i++) {
-    int colIndex = i;
-    int rowIndex = i * numCols;
-    int boxIndex = 3 * (i % 3 + (i / 3) * 9);
+  int groupIndex = 0;
 
+  // Column constraints
+  for (int i = 0; i < numCols; i++) {
+    int cellIndex = i;
     for (int j = 0; j < constraintGroupSize; j++) {
-      colCells[i][j] = colIndex;
-      rowCells[i][j] = rowIndex;
-      boxCells[i][j] = boxIndex;
+      constraintCells[groupIndex][j] = cellIndex;
+      cellIndex += 9;
+    }
+    groupIndex++;
+  }
 
-      colIndex += 9;
-      rowIndex += 1;
+  // Row constraints
+  for (int i = 0; i < numRows; i++) {
+    int cellIndex = i * numCols;
+    for (int j = 0; j < constraintGroupSize; j++) {
+      constraintCells[groupIndex][j] = cellIndex;
+      cellIndex++;
+    }
+    groupIndex++;
+  }
+
+  // Box constraints
+  for (int i = 0; i < numBoxes; i++) {
+    int cellIndex = 3 * (i % 3 + (i / 3) * 9);
+    for (int j = 0; j < constraintGroupSize; j++) {
+      constraintCells[groupIndex][j] = cellIndex;
       if (j % 3 == 2) {
-        boxIndex += 7;
+        cellIndex += 7;
       } else {
-        boxIndex += 1;
+        cellIndex++;
       }
     }
+    groupIndex++;
   }
 }
 
@@ -64,22 +78,31 @@ int valueToBit(int value) {
 void SudokuCell::init(int cellIndex) {
   _value = 0;
   _fixed = false;
-  _colMask = maxBitMask;
-  _rowMask = maxBitMask;
-  _boxMask = maxBitMask;
+
+  for (int i = 0; i < numConstraintsPerCell; i++) {
+    _constraintMask[i] = maxBitMask;
+  }
 
   _index = cellIndex;
-  _col = _index % numCols;
-  _row = (_index - _col) / numCols;
-  _box = _col / 3 + 3 * (_row / 3);
+
+  int col = _index % numCols;
+  int row = (_index - col) / numCols;
+  _constraintGroup[0] = col;
+  _constraintGroup[1] = numCols + row;
+  _constraintGroup[2] = numCols + numRows + col / 3 + 3 * (row / 3);
+}
+
+int SudokuCell::bitMask() {
+  // Hardcoded for efficiency.
+  return (
+    _constraintMask[0] &
+    _constraintMask[1] &
+    _constraintMask[2]
+  );
 }
 
 bool SudokuCell::isBitAllowed(int bit) {
-  return (
-    (_colMask & bit) != 0 &&
-    (_rowMask & bit) != 0 &&
-    (_boxMask & bit) != 0
-  );
+  return (bitMask() & bit) != 0;
 }
 
 bool SudokuCell::hasOneAllowedValue() {
@@ -97,9 +120,7 @@ void Sudoku::init() {
   }
 
   for (int i = 0; i < numConstraintGroups; i++) {
-    _colMasks[i] = maxBitMask;
-    _rowMasks[i] = maxBitMask;
-    _boxMasks[i] = maxBitMask;
+    _constraintMask[i] = maxBitMask;
   }
 
   _autoFix = false;
@@ -120,33 +141,20 @@ void Sudoku::init(Sudoku& sudoku) {
 }
 
 void Sudoku::updateBitMasks(SudokuCell& cell, int bit, int (*updateFun)(int, int)) {
-  int* colIndices = colCells[cell.col()];
-  int* rowIndices = rowCells[cell.row()];
-  int* boxIndices = boxCells[cell.box()];
+  for (int i = 0; i < numConstraintsPerCell; i++) {
+    int groupIndex = cell._constraintGroup[i];
 
-  for (int i = 0; i < constraintGroupSize; i++) {
-    int ci = colIndices[i];
-    if (ci != cell.index()) {
-      SudokuCell& cell2 = _cells[ci];
-      cell2._colMask = (*updateFun)(cell2._colMask, bit);
+    int* cellIndices = constraintCells[groupIndex];
+    for (int j = 0; j < constraintGroupSize; j++) {
+      int ci = cellIndices[j];
+      if (ci != cell.index()) {
+        SudokuCell& cell2 = _cells[ci];
+        cell2._constraintMask[i] = (*updateFun)(cell2._constraintMask[i], bit);
+      }
     }
 
-    ci = rowIndices[i];
-    if (ci != cell.index()) {
-      SudokuCell& cell2 = _cells[ci];
-      cell2._rowMask = (*updateFun)(cell2._rowMask, bit);
-    }
-
-    ci = boxIndices[i];
-    if (ci != cell.index()) {
-      SudokuCell& cell2 = _cells[ci];
-      cell2._boxMask = (*updateFun)(cell2._boxMask, bit);
-    }
+    _constraintMask[groupIndex] = (*updateFun)(_constraintMask[groupIndex], bit);
   }
-
-  _colMasks[cell.col()] = (*updateFun)(_colMasks[cell.col()], bit);
-  _rowMasks[cell.row()] = (*updateFun)(_rowMasks[cell.row()], bit);
-  _boxMasks[cell.box()] = (*updateFun)(_boxMasks[cell.box()], bit);
 }
 
 void Sudoku::setValue(int x, int y, int value) {

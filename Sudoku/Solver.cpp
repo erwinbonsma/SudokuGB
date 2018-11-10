@@ -75,26 +75,19 @@ bool Solver::checkSinglePosition(int mask, int* cellIndices) {
 }
 
 bool Solver::postSet(SudokuCell& cell) {
-  int* colIndices = colCells[cell.col()];
-  int* rowIndices = rowCells[cell.row()];
-  int* boxIndices = boxCells[cell.box()];
+  for (int i = 0; i < numConstraintsPerCell; i++) {
+    int groupIndex = cell._constraintGroup[i];
 
-  for (int i = 0; i < constraintGroupSize; i++) {
-    if (
-      checkSingleValue(colIndices[i]) ||
-      checkSingleValue(rowIndices[i]) ||
-      checkSingleValue(boxIndices[i])
-    ) {
+    int* cellIndices = constraintCells[groupIndex];
+    for (int j = 0; j < constraintGroupSize; j++) {
+      if (checkSingleValue(cellIndices[j])) {
+        return true; // Stuck
+      }
+    }
+
+    if (checkSinglePosition(_s._constraintMask[groupIndex], cellIndices)) {
       return true; // Stuck
     }
-  }
-
-  if (
-    checkSinglePosition(_s._colMasks[cell.col()], colIndices) ||
-    checkSinglePosition(_s._rowMasks[cell.row()], rowIndices) ||
-    checkSinglePosition(_s._boxMasks[cell.box()], boxIndices)
-  ) {
-    return true; // Stuck
   }
 
   return false;
@@ -111,9 +104,7 @@ bool Solver::initialAutoSet() {
   // Checks if each value in a constraint group still has allowed positions
   for (int i = 0; i < numConstraintGroups; i++) {
     if (
-      checkSinglePosition(_s._colMasks[i], colCells[i]) ||
-      checkSinglePosition(_s._rowMasks[i], rowCells[i]) ||
-      checkSinglePosition(_s._boxMasks[i], boxCells[i])
+      checkSinglePosition(_s._constraintMask[i], constraintCells[i])
     ) {
       return true; // Stuck
     }
