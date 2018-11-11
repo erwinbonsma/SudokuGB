@@ -99,38 +99,11 @@ void initConstraintTables() {
   //assertTrue(false);
 }
 
-int setBit(int mask, int bit) {
-  return (mask | bit);
-}
-
-int clearBit(int mask, int bit) {
-  return (mask & ~bit);
-}
-
-int bitToValue(int bit) {
-  int value = 0;
-  while (bit > 0) {
-    value++;
-    bit >>= 1;
-  }
-  return value;
-}
-
-int valueToBit(int value) {
-  return 1 << (value - 1);
-}
-
 //------------------------------------------------------------------------------
 // SudokuCell
 
-void SudokuCell::init(int cellIndex, bool hyperConstraints) {
-  _value = 0;
-  _fixed = false;
-
-  for (int i = 0; i < maxConstraintsPerCell; i++) {
-    _constraintMask[i] = maxBitMask;
-  }
-
+void SudokuCell::init(Sudoku* parent, int cellIndex) {
+  _parent = parent;
   _index = cellIndex;
 
   int col = _index % numCols;
@@ -139,44 +112,50 @@ void SudokuCell::init(int cellIndex, bool hyperConstraints) {
   _constraintGroup[1] = numCols + row;
   _constraintGroup[2] = numCols + numRows + col / 3 + 3 * (row / 3);
 
-  if (hyperConstraints) {
-    int i = numCols + numRows + numBoxes;
-    while (i < numConstraintGroups) {
-      for (int j = 0; j < constraintGroupSize; j++) {
-        if (constraintCells[i][j] == _index) {
-          _constraintGroup[3] = i;
-          _numAllowedConstraints = (i < numExplicitConstraintGroups) ? 4 : 3;
-          return;
-        }
+  // Determine the hyper-constraint group that this cell belongs to by searching
+  // for the group that contains this cell. Due to their more irregular
+  // structure, it is harder to calculate this from the cell's position.
+  int i = numCols + numRows + numBoxes;
+  while (i < numConstraintGroups) {
+    int* cellIndices = constraintCells[i];
+    for (int j = 0; j < constraintGroupSize; j++) {
+      if (cellIndices[j] == _index) {
+        _constraintGroup[3] = i;
+        return;
       }
-      i++;
     }
-    assertTrue(false);
+    i++;
   }
-  else {
-    _constraintGroup[3] = -1;
-    _numAllowedConstraints = 3;
+  assertTrue(false);
+}
+
+void SudokuCell::reset() {
+  _value = 0;
+  _fixed = false;
+
+  if (_parent->hyperConstraintsEnabled()) {
+    // The last constraint only applies when hyper-boxes are enabled and this
+    // cell is part of one of the four explicit hyper boxes.
+    _allowedUsesLastConstraint = (
+      _constraintGroup[3] < numExplicitConstraintGroups
+    );
+    _possibleUsesLastConstraint = true;
+  } else {
+    _allowedUsesLastConstraint = false;
+    _possibleUsesLastConstraint = false;
   }
 }
 
-int SudokuCell::allowedBitMask() {
+int SudokuCell::bitMask(bool applyLastConstraint) {
   int m = (
-    _constraintMask[0] &
-    _constraintMask[1] &
-    _constraintMask[2]
+    _parent->_constraintMask[_constraintGroup[0]] &
+    _parent->_constraintMask[_constraintGroup[1]] &
+    _parent->_constraintMask[_constraintGroup[2]]
   );
-  // The last constraint only applies when hyper-boxes are enabled and this cell
-  // is part of one of the four explicit hyper boxes.
-  return (_numAllowedConstraints > 3) ? (m & _constraintMask[3]) : m;
-}
-
-int SudokuCell::possibleBitMask() {
-  return (
-    _constraintMask[0] &
-    _constraintMask[1] &
-    _constraintMask[2] &
-    _constraintMask[3]
-  );
+  if (applyLastConstraint) {
+    m &= _parent->_constraintMask[_constraintGroup[3]];
+  }
+  return m;
 }
 
 bool SudokuCell::isBitAllowed(int bit) {
@@ -199,31 +178,33 @@ bool SudokuCell::hasOnePossibleValue() {
   return (m & (m - 1)) == 0;
 }
 
-bool SudokuCell::hasImpossibleValue() {
-  return _value > 0 && (_value & possibleBitMask()) == 0;
-}
-
 //------------------------------------------------------------------------------
 // Sudoku
 
-void Sudoku::init(bool hyperConstraints) {
+void Sudoku::init() {
   for (int i = 0; i < numCells; i++) {
-    _cells[i].init(i, hyperConstraints);
+    _cells[i].init(this, i);
+  }
+}
+
+void Sudoku::reset(bool hyperConstraints) {
+  _hyperConstraints = hyperConstraints;
+  _autoFix = false;
+
+  _numFilled = 0;
+  _numFixed = 0;
+
+  for (int i = 0; i < numCells; i++) {
+    _cells[i].reset();
   }
 
   for (int i = 0; i < numConstraintGroups; i++) {
     _constraintMask[i] = maxBitMask;
   }
-
-  _autoFix = false;
-  _hyperConstraints = hyperConstraints;
-
-  _numFilled = 0;
-  _numFixed = 0;
 }
 
-void Sudoku::init(Sudoku& sudoku) {
-  init(sudoku.hyperConstraintsEnabled());
+void Sudoku::reset(Sudoku& sudoku) {
+  reset(sudoku.hyperConstraintsEnabled());
 
   for (int i = 0; i < numCells; i++) {
     int bit = sudoku.cellAt(i).getBitValue();
@@ -237,18 +218,7 @@ void Sudoku::updateBitMasks(SudokuCell& cell, int bit, int (*updateFun)(int, int
   for (int i = 0; i < maxConstraintsPerCell; i++) {
     int groupIndex = cell._constraintGroup[i];
 
-    if (groupIndex >= 0) {
-      int* cellIndices = constraintCells[groupIndex];
-      for (int j = 0; j < constraintGroupSize; j++) {
-        int ci = cellIndices[j];
-        if (ci != cell.index()) {
-          SudokuCell& cell2 = _cells[ci];
-          cell2._constraintMask[i] = (*updateFun)(cell2._constraintMask[i], bit);
-        }
-      }
-
-      _constraintMask[groupIndex] = (*updateFun)(_constraintMask[groupIndex], bit);
-    }
+    _constraintMask[groupIndex] = (*updateFun)(_constraintMask[groupIndex], bit);
   }
 }
 

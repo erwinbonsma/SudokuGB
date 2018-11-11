@@ -24,6 +24,27 @@ void permute(int* list, int len) {
   }
 }
 
+int setBit(int mask, int bit) {
+  return (mask | bit);
+}
+
+int clearBit(int mask, int bit) {
+  return (mask & ~bit);
+}
+
+int bitToValue(int bit) {
+  int value = 0;
+  while (bit > 0) {
+    value++;
+    bit >>= 1;
+  }
+  return value;
+}
+
+int valueToBit(int value) {
+  return 1 << (value - 1);
+}
+
 void assertFailed(const char *function, const char *file, int lineNo, const char *expression) {
   if (SerialUSB) {
     SerialUSB.println("=== ASSERT FAILED ===");

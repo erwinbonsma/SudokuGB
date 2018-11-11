@@ -46,7 +46,7 @@ void resetPuzzle() {
 
 void generateNewPuzzle() {
   // Reset the puzzle
-  sudoku.init(true);
+  sudoku.reset(true);
 
   // Solve it to generate a (random) solution
   //assertTrue(solver.randomSolve());
@@ -72,7 +72,7 @@ void generateNewPuzzle() {
 
 void createNewPuzzle() {
   // Clear puzzle
-  sudoku.init(sudoku.hyperConstraintsEnabled());
+  sudoku.reset(sudoku.hyperConstraintsEnabled());
   sudoku.setAutoFix(true);
   solutionCount = SolutionCount::Multiple;
   editingPuzzle = true;
@@ -228,6 +228,7 @@ void setup() {
 #endif
 
   initConstraintTables();
+  sudoku.init();
 
   // Trigger puzzle generation in 2nd frame. This way generate message is still
   // shown first

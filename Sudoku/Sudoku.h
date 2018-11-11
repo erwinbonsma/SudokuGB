@@ -14,8 +14,7 @@ bool isPartOfHyperBox(int x, int y);
 
 void initConstraintTables();
 
-// TMP
-extern int bitToValue(int bit);
+class Sudoku;
 
 class SudokuCell {
   friend class Sudoku;
@@ -25,6 +24,8 @@ class SudokuCell {
   // Index of cell
   int _index;
 
+  Sudoku* _parent;
+
 protected:
   int _value;
   bool _fixed;
@@ -32,21 +33,24 @@ protected:
   // The constraint groups that this cell is part of
   int _constraintGroup[maxConstraintsPerCell];
 
-  // Tracks the allowed values for this cell for each constraint group that
-  // contains this cell.
-  int _constraintMask[maxConstraintsPerCell];
+  bool _allowedUsesLastConstraint;
+  bool _possibleUsesLastConstraint;
 
-  int _numAllowedConstraints;
+  int bitMask(bool applyLastConstraint);
 
-public:
   /* Mask that indicates what (bit) values are allowed.
    */
-  int allowedBitMask();
+  int allowedBitMask() { return bitMask(_allowedUsesLastConstraint); }
 
   /* Mask that indicates what (bit) values are possible. This can be fewer than
    * are allowed when the cell is part of an implicit hyper-box.
    */
-  int possibleBitMask();
+  int possibleBitMask() { return bitMask(_possibleUsesLastConstraint); }
+
+public:
+  void init(Sudoku* parent, int cellIndex);
+
+  void reset();
 
   bool isBitAllowed(int bit);
   bool isBitPossible(int bit);
@@ -54,20 +58,11 @@ public:
   bool hasOneAllowedValue();
   bool hasOnePossibleValue();
 
-
-  /* Returns true when the cell is set to a value that is not possible. This can
-   * happen when the cell is part of an implicit hyper-box constraint group (as
-   * this does not disallow values).
-   */
-  bool hasImpossibleValue();
-
   int getBitValue() { return _value; }
   bool isSet() { return _value != 0; }
   bool isFixed() { return _fixed; }
 
   int index() { return _index; }
-
-  void init(int cellIndex, bool hyperConstraints);
 };
 
 //------------------------------------------------------------------------------
@@ -82,6 +77,7 @@ enum class AutoSetResult : int {
 //------------------------------------------------------------------------------
 
 class Sudoku {
+  friend class SudokuCell;
   friend class Solver;
 
   SudokuCell _cells[numCells];
@@ -96,9 +92,12 @@ class Sudoku {
   int _numFixed;
 
 public:
+  // Should be called once.
   void init();
-  void init(bool hyperConstraints);
-  void init(Sudoku& sudoku);
+
+  // Instance "constructors" that reset the puzzle as if creating a new instance.
+  void reset(bool hyperConstraints);
+  void reset(Sudoku& sudoku);
 
   // Getters
   SudokuCell& cellAt(int x, int y) { return _cells[x + y * numCols]; }

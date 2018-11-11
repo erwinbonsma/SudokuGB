@@ -77,6 +77,15 @@ class Solver {
    */
   void autoClear(int num);
 
+  /* Sets the masks for the implicit constraints. This needs to happen on
+   * puzzles that the user has been editing because he is allowed to violate
+   * these constraints which can cause the bookkeeping to be corrupted. This
+   * does not matter while the user is editing (as only the "allowed" masks are
+   * used) but needs to be fixed before the solver starts (as it uses the
+   * implicit "possible" masks).
+   */
+  bool setImplicitMasks();
+
   /* Tries to set any cells that can only have one value either because it can
    * have no other values, or because it is the only cell in a specific
    * constraint group that can have this value.

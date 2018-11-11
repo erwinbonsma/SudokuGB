@@ -20,6 +20,12 @@ void initDebugLog();
 
 void permute(int* list, int len);
 
+int setBit(int mask, int bit);
+int clearBit(int mask, int bit);
+
+int bitToValue(int bit);
+int valueToBit(int value);
+
 void assertFailed(const char *function, const char *file, int lineNo, const char *expression);
 
 #define assertTrue(condition) \

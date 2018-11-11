@@ -47,7 +47,7 @@ bool Solver::checkSingleValue(int cellIndex) {
 
 bool Solver::checkSinglePosition(int mask, int* cellIndices) {
   for (int bit = 1; bit <= maxBitValue; bit *= 2) {
-    if ((mask & bit) > 0) {
+    if ((mask & bit) != 0) {
       // Value not yet set in given group. Check possible positions
 
       int i = 0;
@@ -79,14 +79,11 @@ bool Solver::checkSinglePosition(int mask, int* cellIndices) {
 bool Solver::postSet(SudokuCell& cell) {
   for (int i = 0; i < maxConstraintsPerCell; i++) {
     int groupIndex = cell._constraintGroup[i];
-
-    if (groupIndex >= 0) {
-      int* cellIndices = constraintCells[groupIndex];
-      for (int j = 0; j < constraintGroupSize; j++) {
-        if (checkSingleValue(cellIndices[j])) {
-          debug("Stuck, checkSingleValue %d\n", cellIndices[j]);
-          return true; // Stuck
-        }
+    int* cellIndices = constraintCells[groupIndex];
+    for (int j = 0; j < constraintGroupSize; j++) {
+      if (checkSingleValue(cellIndices[j])) {
+        debug("Stuck, checkSingleValue %d\n", cellIndices[j]);
+        return true; // Stuck
       }
     }
   }
@@ -101,15 +98,35 @@ bool Solver::postSet(SudokuCell& cell) {
   return false;
 }
 
+bool Solver::setImplicitMasks() {
+  if (!_s.hyperConstraintsEnabled()) {
+    return false;
+  }
+
+  for (int i = numExplicitConstraintGroups; i < numConstraintGroups; i++) {
+    int m = maxBitMask;
+    int* cellIndices = constraintCells[i];
+    for (int j = 0; j < constraintGroupSize; j++) {
+      int val = _s.cellAt(cellIndices[j]).getBitValue();
+      if (val > 0) {
+        if ((m & val) != 0) {
+          m = clearBit(m, val);
+        } else {
+          // Within this implicit constraint group one value occurs more than
+          // once. That is allowed, but prevents a solution.
+          return true; // Stuck
+        }
+      }
+    }
+    _s._constraintMask[i] = m;
+  }
+
+  return false;
+}
+
 bool Solver::initialAutoSet() {
   // Check if each cell still has possible values
   for (int i = 0; i < numCells; i++) {
-    if (_s.cellAt(i).hasImpossibleValue()) {
-      // A cell has a value that is not possible (even though it is allowed)
-      // This can happen when the cell is part of an implicit hyper-box group.
-      return true;
-    }
-    
     if (checkSingleValue(i)) {
       return true; // Stuck
     }
@@ -214,6 +231,10 @@ SolutionCount Solver::countSolutions() {
 
   _numSolutionsFound = 0;
   _totalAutoSet = 0;
+
+  if (setImplicitMasks()) {
+    return SolutionCount::None;
+  }
 
   if (!initialAutoSet()) {
     solve(0);

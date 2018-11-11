@@ -67,7 +67,7 @@ bool loadPuzzle() {
     return false;
   }
 
-  sudoku.init(sudoku.hyperConstraintsEnabled());
+  sudoku.reset(sudoku.hyperConstraintsEnabled());
   for (int y = 0; y < numRows; y++) {
     for (int x = 0; x < numCols; x++) {
       uint8_t val = storeBuffer[x + y * numCols];
