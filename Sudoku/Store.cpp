@@ -22,7 +22,25 @@ const uint8_t noSolutionBit    = 0x08; // Only used in editing mode
 const int storeBufferSize = numCells + 1;
 uint8_t storeBuffer[storeBufferSize];
 
-bool storePuzzle() {
+bool isStoreBufferEmpty() {
+  for (int i = 0; i < storeBufferSize; i++) {
+    if (storeBuffer[i] != 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+int targetBlockIndex(bool userAction) {
+  int blockIndex = sudoku.hyperConstraintsEnabled() ? 1 : 0;
+  if (!userAction) {
+    blockIndex += 2;
+  }
+  return blockIndex;
+}
+
+bool storePuzzle(bool userAction) {
   for (int y = 0; y < numRows; y++) {
     for (int x = 0; x < numCols; x++) {
       uint8_t val = sudoku.getValue(x, y);
@@ -51,19 +69,25 @@ bool storePuzzle() {
   }
   storeBuffer[numCells] = mode;
 
-  int blockIndex = sudoku.hyperConstraintsEnabled() ? 1 : 0;
-  return gb.save.set(blockIndex, (void*)storeBuffer, storeBufferSize);
+  return gb.save.set(
+    targetBlockIndex(userAction), (void*)storeBuffer, storeBufferSize
+  );
 }
 
-bool loadPuzzle() {
-  // TMP: Clear buffer before reading
-  // TODO: Remove
+bool loadPuzzle(bool userAction) {
+  // Clear buffer before reading. Although it should not be needed, better safe
+  // than sorry.
   for (int i = 0; i < storeBufferSize; i++) {
     storeBuffer[i] = (uint8_t)0;
   }
 
-  int blockIndex = sudoku.hyperConstraintsEnabled() ? 1 : 0;
-  if ( !gb.save.get(blockIndex, (void*)storeBuffer, storeBufferSize) ) {
+  if ( !gb.save.get(
+    targetBlockIndex(userAction), (void*)storeBuffer, storeBufferSize
+  )) {
+    return false;
+  }
+
+  if (isStoreBufferEmpty()) {
     return false;
   }
 

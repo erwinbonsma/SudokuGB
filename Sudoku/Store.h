@@ -4,5 +4,5 @@
  * Copyright 2018, Erwin Bonsma
  */
 
-bool storePuzzle();
-bool loadPuzzle();
+bool storePuzzle(bool userAction);
+bool loadPuzzle(bool userAction);

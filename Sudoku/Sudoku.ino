@@ -111,12 +111,14 @@ void mainMenu() {
 
   switch (entry) {
     case 0:
-      if (storePuzzle()) {
+      if (storePuzzle(true)) {
         gb.gui.popup("Puzzle saved", 40);
       }
       break;
     case 1:
-      loadPuzzle();
+      if (!loadPuzzle(true)) {
+        gb.gui.popup("Load failed", 40);
+      }
       break;
     case 2:
       resetPuzzle();
@@ -130,8 +132,13 @@ void mainMenu() {
       createNewPuzzle();
       break;
     case 5:
+      // Auto-store current puzzle.
+      storePuzzle(false);
       sudoku.reset(!sudoku.hyperConstraintsEnabled());
-      generateNewPuzzleCountdown = 2;
+      if (!loadPuzzle(false)) {
+        // No puzzle was auto-stored yet. Generate one.
+        generateNewPuzzleCountdown = 2;
+      }
       break;
   }
 }
