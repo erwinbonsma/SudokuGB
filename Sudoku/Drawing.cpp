@@ -166,9 +166,6 @@ void draw(Sudoku& sudoku) {
     drawSolveLights();
   } else {
     solvedCount = 0;
-
-    gb.display.setColor(BLUE);
-    drawCell(cursorCol, cursorRow);
   }
 
   if (solutionCount == SolutionCount::None) {
@@ -177,12 +174,23 @@ void draw(Sudoku& sudoku) {
 
   for (int x = 0; x < numCols; x++) {
     for (int y = 0; y < numRows; y++) {
+      ColorIndex bgColor = INDEX_BLACK;
+      if (sudoku.hyperConstraintsEnabled() && isPartOfHyperBox(x, y)) {
+        bgColor = INDEX_DARKGRAY;
+      }
       if (solvedCount > 0) {
         ColorIndex color = solvedColor(x, y);
         if (color != INDEX_BLACK) {
-          gb.display.setColor(color);
-          drawCell(x, y);
+          bgColor = color;
         }
+      } else {
+        if (x == cursorCol && y == cursorRow) {
+          bgColor = INDEX_BLUE;
+        }
+      }
+      if (bgColor != INDEX_BLACK) {
+        gb.display.setColor(bgColor);
+        drawCell(x, y);
       }
       if (sudoku.isSet(x, y)) {
         if (solutionCount == SolutionCount::Multiple) {

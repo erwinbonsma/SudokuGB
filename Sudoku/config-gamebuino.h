@@ -4,8 +4,8 @@
  * Copyright 2018, Erwin Bonsma
  */
 
-// Can only store one puzzle
-#define SAVEBLOCK_NUM 1
+// Can store two puzzles (a normal one and a hyper sudoku)
+#define SAVEBLOCK_NUM 2
 
 // Should match storeBufferSize in Store.cpp
 #define SAVECONF_DEFAULT_BLOBSIZE 82

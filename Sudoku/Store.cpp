@@ -51,7 +51,8 @@ bool storePuzzle() {
   }
   storeBuffer[numCells] = mode;
 
-  return gb.save.set(0, (void*)storeBuffer, storeBufferSize);
+  int blockIndex = sudoku.hyperConstraintsEnabled() ? 1 : 0;
+  return gb.save.set(blockIndex, (void*)storeBuffer, storeBufferSize);
 }
 
 bool loadPuzzle() {
@@ -61,11 +62,12 @@ bool loadPuzzle() {
     storeBuffer[i] = (uint8_t)0;
   }
 
-  if ( !gb.save.get(0, (void*)storeBuffer, storeBufferSize) ) {
+  int blockIndex = sudoku.hyperConstraintsEnabled() ? 1 : 0;
+  if ( !gb.save.get(blockIndex, (void*)storeBuffer, storeBufferSize) ) {
     return false;
   }
 
-  sudoku.init();
+  sudoku.init(sudoku.hyperConstraintsEnabled());
   for (int y = 0; y < numRows; y++) {
     for (int x = 0; x < numCols; x++) {
       uint8_t val = storeBuffer[x + y * numCols];

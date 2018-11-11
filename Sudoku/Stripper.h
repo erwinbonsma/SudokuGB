@@ -27,7 +27,7 @@ class Stripper {
 protected:
   bool hasOnePosition(int bit, int* cellIndices);
 
-  void clearIfOnlyAllowedPosition(SudokuCell& cell);
+  void clearIfOnlyPossiblePosition(SudokuCell& cell);
 
   /* First stripping phase. All cells are cleared whose value can be directly
    * inferred given the other filled cells.

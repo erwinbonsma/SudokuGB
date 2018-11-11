@@ -36,16 +36,16 @@ bool Stripper::hasOnePosition(int bit, int* cellIndices) {
   return true;
 }
 
-void Stripper::clearIfOnlyAllowedPosition(SudokuCell& cell) {
+void Stripper::clearIfOnlyPossiblePosition(SudokuCell& cell) {
   int bit = cell.getBitValue();
 
   // Try clearing value
   _s.clearValue(cell);
 
   bool onePos = false;
-  for (int i = 0; i < numConstraintsPerCell; i++) {
+  for (int i = 0; i < maxConstraintsPerCell; i++) {
     int groupIndex = cell._constraintGroup[i];
-    if (hasOnePosition(bit, constraintCells[groupIndex])) {
+    if (groupIndex >= 0 && hasOnePosition(bit, constraintCells[groupIndex])) {
       onePos = true;
     }
   }
@@ -59,24 +59,25 @@ void Stripper::clearIfOnlyAllowedPosition(SudokuCell& cell) {
 void Stripper::strip1() {
   for (int i = 0; i < numCells; i++) {
     SudokuCell& cell = _s.cellAt(_p[i]);
-    if (cell.hasOneAllowedValue()) {
+    if (cell.hasOnePossibleValue()) {
       _s.clearValue(cell);
     }
     else {
-      clearIfOnlyAllowedPosition(cell);
+      clearIfOnlyPossiblePosition(cell);
     }
   }
 }
 
 void Stripper::strip2() {
   for (int i = 0; i < numCells; i++) {
+    debug("strip2 %d\n", i);
     SudokuCell& cell = _s.cellAt(_p[i]);
     int bit0 = cell.getBitValue();
     if (bit0 > 0) {
       int bit = 1;
       bool unique = true;
       while (bit <= maxBitValue && unique) {
-        if (bit != bit0 && cell.isBitAllowed(bit)) {
+        if (bit != bit0 && cell.isBitPossible(bit)) {
           _s.setBitValue(cell, bit);
           if (_solver.isSolvable()) {
             unique = false;
@@ -96,6 +97,8 @@ void Stripper::strip2() {
 
 void Stripper::strip() {
   strip1();
+  debug("strip1 done\n", 0);
+  _s.dump();
   strip2();
 }
 

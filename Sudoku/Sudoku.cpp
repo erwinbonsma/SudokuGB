@@ -13,6 +13,10 @@
 // Constraint tables
 int constraintCells[numConstraintGroups][constraintGroupSize];
 
+bool isPartOfHyperBox(int x, int y) {
+  return ((x + 3) % 4 < 3) && ((y + 3) % 4 < 3);
+}
+
 void initConstraintTables() {
   int groupIndex = 0;
 
@@ -49,6 +53,50 @@ void initConstraintTables() {
     }
     groupIndex++;
   }
+
+  // Hyper-box constraints
+  // First the explicit ones
+  for (int i = 0; i < 4; i++) {
+    int x = 1 + (i % 2) * 4;
+    int y = 1 + (i / 2) * 4;
+    int cellIndex = x + y * numCols;
+
+    assertTrue(isPartOfHyperBox(x, y));
+    for (int j = 0; j < constraintGroupSize; j++) {
+      constraintCells[groupIndex][j] = cellIndex;
+      if (j % 3 == 2) {
+        cellIndex += 7;
+      } else {
+        cellIndex++;
+      }
+    }
+    groupIndex++;
+  }
+  // Now the four ones these imply
+  for (int i = 0; i < 2; i++) {
+    for (int j = 0; j < constraintGroupSize; j++) {
+      int x = (j % 3) * 4;
+      int y = 1 + i * 4 + (j / 3);
+      constraintCells[groupIndex][j] = x + y * numCols;
+      constraintCells[groupIndex + 1][j] = y + x * numCols;
+    }
+    groupIndex += 2;
+  }
+  // Now the last one
+  for (int j = 0; j < constraintGroupSize; j++) {
+    int x = (j % 3) * 4;
+    int y = (j / 3) * 4;
+    constraintCells[groupIndex][j] = x + y * numCols;
+  }
+
+  for (int i = 0; i < numConstraintGroups; i++) {
+    debug("%2d. ", i);
+    for (int j = 0; j < constraintGroupSize; j++) {
+      debug("%2d ", constraintCells[i][j]);
+    }
+    debug("\n", 0);
+  }
+  //assertTrue(false);
 }
 
 int setBit(int mask, int bit) {
@@ -75,11 +123,11 @@ int valueToBit(int value) {
 //------------------------------------------------------------------------------
 // SudokuCell
 
-void SudokuCell::init(int cellIndex) {
+void SudokuCell::init(int cellIndex, bool hyperConstraints) {
   _value = 0;
   _fixed = false;
 
-  for (int i = 0; i < numConstraintsPerCell; i++) {
+  for (int i = 0; i < maxConstraintsPerCell; i++) {
     _constraintMask[i] = maxBitMask;
   }
 
@@ -90,33 +138,77 @@ void SudokuCell::init(int cellIndex) {
   _constraintGroup[0] = col;
   _constraintGroup[1] = numCols + row;
   _constraintGroup[2] = numCols + numRows + col / 3 + 3 * (row / 3);
+
+  if (hyperConstraints) {
+    int i = numCols + numRows + numBoxes;
+    while (i < numConstraintGroups) {
+      for (int j = 0; j < constraintGroupSize; j++) {
+        if (constraintCells[i][j] == _index) {
+          _constraintGroup[3] = i;
+          _numAllowedConstraints = (i < numExplicitConstraintGroups) ? 4 : 3;
+          return;
+        }
+      }
+      i++;
+    }
+    assertTrue(false);
+  }
+  else {
+    _constraintGroup[3] = -1;
+    _numAllowedConstraints = 3;
+  }
 }
 
-int SudokuCell::bitMask() {
-  // Hardcoded for efficiency.
-  return (
+int SudokuCell::allowedBitMask() {
+  int m = (
     _constraintMask[0] &
     _constraintMask[1] &
     _constraintMask[2]
   );
+  // The last constraint only applies when hyper-boxes are enabled and this cell
+  // is part of one of the four explicit hyper boxes.
+  return (_numAllowedConstraints > 3) ? (m & _constraintMask[3]) : m;
+}
+
+int SudokuCell::possibleBitMask() {
+  return (
+    _constraintMask[0] &
+    _constraintMask[1] &
+    _constraintMask[2] &
+    _constraintMask[3]
+  );
 }
 
 bool SudokuCell::isBitAllowed(int bit) {
-  return (bitMask() & bit) != 0;
+  return (allowedBitMask() & bit) != 0;
+}
+
+bool SudokuCell::isBitPossible(int bit) {
+  return (possibleBitMask() & bit) != 0;
 }
 
 bool SudokuCell::hasOneAllowedValue() {
-  int m = bitMask();
+  int m = allowedBitMask();
   // Note: x & (x - 1) clears the right-most bit
   return (m & (m - 1)) == 0;
+}
+
+bool SudokuCell::hasOnePossibleValue() {
+  int m = possibleBitMask();
+  // Note: x & (x - 1) clears the right-most bit
+  return (m & (m - 1)) == 0;
+}
+
+bool SudokuCell::hasImpossibleValue() {
+  return _value > 0 && (_value & possibleBitMask()) == 0;
 }
 
 //------------------------------------------------------------------------------
 // Sudoku
 
-void Sudoku::init() {
+void Sudoku::init(bool hyperConstraints) {
   for (int i = 0; i < numCells; i++) {
-    _cells[i].init(i);
+    _cells[i].init(i, hyperConstraints);
   }
 
   for (int i = 0; i < numConstraintGroups; i++) {
@@ -124,13 +216,14 @@ void Sudoku::init() {
   }
 
   _autoFix = false;
+  _hyperConstraints = hyperConstraints;
 
   _numFilled = 0;
   _numFixed = 0;
 }
 
 void Sudoku::init(Sudoku& sudoku) {
-  init();
+  init(sudoku.hyperConstraintsEnabled());
 
   for (int i = 0; i < numCells; i++) {
     int bit = sudoku.cellAt(i).getBitValue();
@@ -141,19 +234,21 @@ void Sudoku::init(Sudoku& sudoku) {
 }
 
 void Sudoku::updateBitMasks(SudokuCell& cell, int bit, int (*updateFun)(int, int)) {
-  for (int i = 0; i < numConstraintsPerCell; i++) {
+  for (int i = 0; i < maxConstraintsPerCell; i++) {
     int groupIndex = cell._constraintGroup[i];
 
-    int* cellIndices = constraintCells[groupIndex];
-    for (int j = 0; j < constraintGroupSize; j++) {
-      int ci = cellIndices[j];
-      if (ci != cell.index()) {
-        SudokuCell& cell2 = _cells[ci];
-        cell2._constraintMask[i] = (*updateFun)(cell2._constraintMask[i], bit);
+    if (groupIndex >= 0) {
+      int* cellIndices = constraintCells[groupIndex];
+      for (int j = 0; j < constraintGroupSize; j++) {
+        int ci = cellIndices[j];
+        if (ci != cell.index()) {
+          SudokuCell& cell2 = _cells[ci];
+          cell2._constraintMask[i] = (*updateFun)(cell2._constraintMask[i], bit);
+        }
       }
-    }
 
-    _constraintMask[groupIndex] = (*updateFun)(_constraintMask[groupIndex], bit);
+      _constraintMask[groupIndex] = (*updateFun)(_constraintMask[groupIndex], bit);
+    }
   }
 }
 
@@ -231,13 +326,13 @@ AutoSetResult Sudoku::autoSet(SudokuCell& cell) {
     return AutoSetResult::AlreadySet;
   }
 
-  int m = cell.bitMask();
+  int m = cell.possibleBitMask();
   if (m == 0) {
     return AutoSetResult::Stuck;
   }
 
   // Next evaluates to zero if only one bit was set
-  if (!cell.hasOneAllowedValue()) {
+  if ((m & (m - 1)) != 0) {
     return AutoSetResult::MultipleOptions;
   }
 
@@ -304,8 +399,19 @@ void Sudoku::resetValues() {
   }
 }
 
-#ifdef DEVELOPMENT
 void Sudoku::dump() {
-  debug("numFilled = %d, numFixed = %d\n", _numFilled, _numFixed);
-}
+#ifdef DEVELOPMENT
+  for (int i = 0; i < numCells; i++) {
+    int val = bitToValue(cellAt(i).getBitValue());
+    if (i % 9 == 8) {
+      debug("%d\n", val);
+    }
+    else if (i % 3 == 2) {
+      debug("%d | ", val);
+    }
+    else {
+      debug("%d ", val);
+    }
+  }
 #endif
+}

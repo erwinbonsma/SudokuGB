@@ -18,6 +18,8 @@ Solver::Solver(Sudoku& s) : _s(s) {
 
 bool Solver::postAutoSet(SudokuCell& cell) {
   // Record the cell that has been auto-set, to enable undo when backtracking
+  debug("a[%d]: %d = %d\n", _totalAutoSet, cell.index(), bitToValue(cell.getBitValue()));
+
   _autoSetCells[_totalAutoSet++] = cell.index();
 
   // Recurse to maybe set more
@@ -27,6 +29,7 @@ bool Solver::postAutoSet(SudokuCell& cell) {
 void Solver::autoClear(int num) {
   while (num-- > 0) {
     _s.clearValue(_s.cellAt(_autoSetCells[--_totalAutoSet]));
+    debug("c[%d]\n", _totalAutoSet);
   }
 }
 
@@ -53,8 +56,7 @@ bool Solver::checkSinglePosition(int mask, int* cellIndices) {
       while (i < constraintGroupSize && cnt < 2) {
         int ci = cellIndices[i];
         SudokuCell& cell = _s.cellAt(ci);
-        if (!cell.isSet() && cell.isBitAllowed(bit)
-        ) {
+        if (!cell.isSet() && cell.isBitPossible(bit)) {
           posIndex = ci;
           cnt++;
         }
@@ -75,17 +77,23 @@ bool Solver::checkSinglePosition(int mask, int* cellIndices) {
 }
 
 bool Solver::postSet(SudokuCell& cell) {
-  for (int i = 0; i < numConstraintsPerCell; i++) {
+  for (int i = 0; i < maxConstraintsPerCell; i++) {
     int groupIndex = cell._constraintGroup[i];
 
-    int* cellIndices = constraintCells[groupIndex];
-    for (int j = 0; j < constraintGroupSize; j++) {
-      if (checkSingleValue(cellIndices[j])) {
-        return true; // Stuck
+    if (groupIndex >= 0) {
+      int* cellIndices = constraintCells[groupIndex];
+      for (int j = 0; j < constraintGroupSize; j++) {
+        if (checkSingleValue(cellIndices[j])) {
+          debug("Stuck, checkSingleValue %d\n", cellIndices[j]);
+          return true; // Stuck
+        }
       }
     }
+  }
 
-    if (checkSinglePosition(_s._constraintMask[groupIndex], cellIndices)) {
+  for (int i = 0; i < numConstraintGroups; i++) {
+    if (checkSinglePosition(_s._constraintMask[i], constraintCells[i])) {
+      debug("Stuck, checkSinglePosition, group = %d\n", i);
       return true; // Stuck
     }
   }
@@ -94,8 +102,14 @@ bool Solver::postSet(SudokuCell& cell) {
 }
 
 bool Solver::initialAutoSet() {
-  // Check if each cell still has allowed values
+  // Check if each cell still has possible values
   for (int i = 0; i < numCells; i++) {
+    if (_s.cellAt(i).hasImpossibleValue()) {
+      // A cell has a value that is not possible (even though it is allowed)
+      // This can happen when the cell is part of an implicit hyper-box group.
+      return true;
+    }
+    
     if (checkSingleValue(i)) {
       return true; // Stuck
     }
@@ -114,7 +128,9 @@ bool Solver::initialAutoSet() {
 }
 
 bool Solver::solve(int n) {
+  //debug("solve: n = %d\n", n);
   if (n == numCells) {
+    _s.dump();
     _numSolutionsFound++;
     return (_numSolutionsFound == _numSolutionsToFind);
   }
@@ -130,7 +146,8 @@ bool Solver::solve(int n) {
   int totalAutoSetBefore = _totalAutoSet;
   int bit = 1 << _offsets[n];
   while (i < numValues && !terminate) {
-    if (cell.isBitAllowed(bit)) {
+    if (cell.isBitPossible(bit)) {
+      debug("Set %d = %d\n", n, bitToValue(bit));
       _s.setBitValue(cell, bit);
 
       bool stuck = postSet(cell);
@@ -143,6 +160,10 @@ bool Solver::solve(int n) {
             return true;
           }
         }
+      } else {
+        debug("Stuck at %d (autoSet = %d)\n", n, _totalAutoSet);
+        _s.dump();
+        //assertTrue(false);
       }
 
       autoClear(_totalAutoSet - totalAutoSetBefore);

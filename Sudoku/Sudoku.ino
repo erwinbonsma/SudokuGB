@@ -46,10 +46,11 @@ void resetPuzzle() {
 
 void generateNewPuzzle() {
   // Reset the puzzle
-  sudoku.init();
+  sudoku.init(true);
 
   // Solve it to generate a (random) solution
-  assertTrue(solver.randomSolve());
+  //assertTrue(solver.randomSolve());
+  assertTrue(solver.solve());
 
 #ifdef DEVELOPMENT_OLD
   // Near solve
@@ -60,7 +61,8 @@ void generateNewPuzzle() {
   sudoku.clearValue(sudoku.cellAt(i));
 #else
   // Now clear as many values as possible to create the actual puzzle
-  stripper.randomStrip();
+  //stripper.randomStrip();
+  stripper.strip();
 #endif
 
   sudoku.fixValues();
@@ -70,7 +72,7 @@ void generateNewPuzzle() {
 
 void createNewPuzzle() {
   // Clear puzzle
-  sudoku.init();
+  sudoku.init(sudoku.hyperConstraintsEnabled());
   sudoku.setAutoFix(true);
   solutionCount = SolutionCount::Multiple;
   editingPuzzle = true;
