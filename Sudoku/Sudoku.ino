@@ -46,11 +46,11 @@ void resetPuzzle() {
 
 void generateNewPuzzle() {
   // Reset the puzzle
-  sudoku.reset(true);
+  sudoku.reset(sudoku.hyperConstraintsEnabled());
 
   // Solve it to generate a (random) solution
-  //assertTrue(solver.randomSolve());
-  assertTrue(solver.solve());
+  assertTrue(solver.randomSolve());
+  sudoku.dump();
 
 #ifdef DEVELOPMENT_OLD
   // Near solve
@@ -61,8 +61,7 @@ void generateNewPuzzle() {
   sudoku.clearValue(sudoku.cellAt(i));
 #else
   // Now clear as many values as possible to create the actual puzzle
-  //stripper.randomStrip();
-  stripper.strip();
+  stripper.randomStrip();
 #endif
 
   sudoku.fixValues();
@@ -78,37 +77,61 @@ void createNewPuzzle() {
   editingPuzzle = true;
 }
 
-const char* menuEntries[] = {
-  "Back to puzzle",
-  "Save puzzle",
-  "Load puzzle",
-  "Reset puzzle",
-  "New puzzle",
-  "Create puzzle"
-};
+#define MAX_MENU_ENTRIES 7
+const char* menuItem_Back = "Back to puzzle";
+const char* menuItem_Save = "Save puzzle";
+const char* menuItem_Load = "Load puzzle";
+const char* menuItem_Reset = "Reset puzzle";
+const char* menuItem_New = "New puzzle";
+const char* menuItem_Create = "Create puzzle";
+const char* menuItem_EnableHyper = "Add hyper boxes";
+const char* menuItem_DisableHyper = "Remove hyper boxes";
+
+const char* menuEntries[MAX_MENU_ENTRIES];
+
+int initMenuEntries() {
+  int i = 0;
+  menuEntries[i++] = menuItem_Save;
+  menuEntries[i++] = menuItem_Load;
+  menuEntries[i++] = menuItem_Reset;
+  menuEntries[i++] = menuItem_New;
+  menuEntries[i++] = menuItem_Create;
+  menuEntries[i++] = (
+    sudoku.hyperConstraintsEnabled()
+    ? menuItem_DisableHyper
+    : menuItem_EnableHyper
+  );
+  menuEntries[i++] = menuItem_Back;
+  return i;
+}
 
 void mainMenu() {
-  uint8_t entry = gb.gui.menu("Main menu", menuEntries);
+  int numItems = initMenuEntries();
+  uint8_t entry = gb.gui.menu("Main menu", menuEntries, numItems);
 
   switch (entry) {
-    case 1:
+    case 0:
       if (storePuzzle()) {
         gb.gui.popup("Puzzle saved", 40);
       }
       break;
-    case 2:
+    case 1:
       loadPuzzle();
       break;
-    case 3:
+    case 2:
       resetPuzzle();
       break;
-    case 4:
+    case 3:
       // Initiate puzzle creation, but wait a few frames before generating puzzle,
       // so OK sound is not (too) abruptly aborted
-      generateNewPuzzleCountdown = 10;
+      generateNewPuzzleCountdown = 2;
+      break;
+    case 4:
+      createNewPuzzle();
       break;
     case 5:
-      createNewPuzzle();
+      sudoku.reset(!sudoku.hyperConstraintsEnabled());
+      generateNewPuzzleCountdown = 2;
       break;
   }
 }

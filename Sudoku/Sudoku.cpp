@@ -185,6 +185,8 @@ void Sudoku::init() {
   for (int i = 0; i < numCells; i++) {
     _cells[i].init(this, i);
   }
+
+  _hyperConstraints = false;
 }
 
 void Sudoku::reset(bool hyperConstraints) {
