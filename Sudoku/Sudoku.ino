@@ -78,14 +78,14 @@ void createNewPuzzle() {
 }
 
 #define MAX_MENU_ENTRIES 7
-const char* menuItem_Back = "Back to puzzle";
+const char* menuItem_Back = "Return";
 const char* menuItem_Save = "Save puzzle";
 const char* menuItem_Load = "Load puzzle";
 const char* menuItem_Reset = "Reset puzzle";
 const char* menuItem_New = "New puzzle";
 const char* menuItem_Create = "Create puzzle";
-const char* menuItem_EnableHyper = "Add hyper boxes";
-const char* menuItem_DisableHyper = "Remove hyper boxes";
+const char* menuItem_EnableHyper = "Enable hyper mode";
+const char* menuItem_DisableHyper = "Disable hyper mode";
 
 const char* menuEntries[MAX_MENU_ENTRIES];
 
