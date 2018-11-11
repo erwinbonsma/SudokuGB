@@ -70,7 +70,6 @@ void Stripper::strip1() {
 
 void Stripper::strip2() {
   for (int i = 0; i < numCells; i++) {
-    debug("strip2 %d\n", i);
     SudokuCell& cell = _s.cellAt(_p[i]);
     int bit0 = cell.getBitValue();
     if (bit0 > 0) {
@@ -97,8 +96,6 @@ void Stripper::strip2() {
 
 void Stripper::strip() {
   strip1();
-  debug("strip1 done\n", 0);
-  _s.dump();
   strip2();
 }
 

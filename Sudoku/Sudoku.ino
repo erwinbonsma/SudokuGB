@@ -178,11 +178,6 @@ bool handleCellChange() {
   );
 
   if (gb.buttons.pressed(BUTTON_A)) {
-#ifdef DEVELOPMENT
-    debug("canUpdateCell = %d\n", canUpdateCell);
-    debug("editingPuzzle = %d, solveInProgress = %d\n", editingPuzzle, sudoku.solveInProgress());
-    sudoku.dump();
-#endif
     if (canUpdateCell) {
       if (sudoku.nextValue(cursorCol, cursorRow)) {
         return true;
@@ -192,7 +187,6 @@ bool handleCellChange() {
     }
   }
   else if (gb.buttons.pressed(BUTTON_B)) {
-    debug("canClearCell = %d\n", canClearCell);
     if (canClearCell) {
       sudoku.clearValue(cursorCol, cursorRow);
       return true;
@@ -206,7 +200,6 @@ void update() {
   handleCursorMove();
 
   if (handleCellChange()) {
-    debug("cellChanged: solveInProgress = %d, solCount = %d\n", sudoku.solveInProgress(), solutionCount);
     if (editingPuzzle && !sudoku.solveInProgress()) {
       solutionCount = solver.countSolutions();
       sudoku.setAutoFix(solutionCount != SolutionCount::One);

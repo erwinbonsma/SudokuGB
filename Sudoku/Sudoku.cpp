@@ -88,15 +88,6 @@ void initConstraintTables() {
     int y = (j / 3) * 4;
     constraintCells[groupIndex][j] = x + y * numCols;
   }
-
-  for (int i = 0; i < numConstraintGroups; i++) {
-    debug("%2d. ", i);
-    for (int j = 0; j < constraintGroupSize; j++) {
-      debug("%2d ", constraintCells[i][j]);
-    }
-    debug("\n", 0);
-  }
-  //assertTrue(false);
 }
 
 //------------------------------------------------------------------------------

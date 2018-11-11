@@ -109,7 +109,6 @@ bool loadPuzzle(bool userAction) {
   }
 
   uint8_t mode = storeBuffer[numCells];
-  debug("mode = 0x%02x\n", mode);
   editingPuzzle = (mode & editingModeBit) != 0;
   sudoku.setAutoFix((mode & autoFixBit) != 0);
   solutionCount = SolutionCount::One;
