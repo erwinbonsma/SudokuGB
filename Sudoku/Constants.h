@@ -17,7 +17,8 @@ const int numImplicitHyperBoxes = 5;
 const int numValues = 9;
 const int numCells = numRows * numCols;
 
-const int numExplicitConstraintGroups = numCols + numRows + numBoxes + numHyperBoxes;
+const int numBasicConstraintGroups = numCols + numRows + numBoxes;
+const int numExplicitConstraintGroups = numBasicConstraintGroups + numHyperBoxes;
 const int numConstraintGroups = numExplicitConstraintGroups + numImplicitHyperBoxes;
 const int maxConstraintsPerCell = 4;
 const int constraintGroupSize = numValues;

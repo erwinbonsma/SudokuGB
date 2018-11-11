@@ -43,6 +43,8 @@ class Solver {
 
   int _numSolutionsFound;
 
+  int _numActiveConstraints;
+
   /* Invoked after a cell has been automatically set. It records the cell to
    * enable backtracking. Furthermore, it checks if more cells can be
    * automatically set.
@@ -99,6 +101,16 @@ class Solver {
 
   // Returns "true" if the termination criterion has been reached.
   bool solve(int n);
+
+  /* Starts solving the possible. Returns the number of solutions found.
+   *
+   * The "restore" setting specifies if the puzzle should be restored to its
+   * original state.
+   * The setting "numSolutionsToFind" determines how many solutions to find
+   * before terminating. This is typically one (to check if the puzzle can be
+   * solved) or two (to establish if the solution is unique or not).
+   */
+  int findSolutions(bool restore, int numSolutionsToFind);
 
 public:
   Solver(Sudoku& s);

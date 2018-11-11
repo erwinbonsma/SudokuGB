@@ -88,7 +88,7 @@ bool Solver::postSet(SudokuCell& cell) {
     }
   }
 
-  for (int i = 0; i < numConstraintGroups; i++) {
+  for (int i = _numActiveConstraints; --i >= 0; ) {
     if (checkSinglePosition(_s._constraintMask[i], constraintCells[i])) {
       debug("Stuck, checkSinglePosition, group = %d\n", i);
       return true; // Stuck
@@ -133,10 +133,8 @@ bool Solver::initialAutoSet() {
   }
 
   // Checks if each value in a constraint group still has allowed positions
-  for (int i = 0; i < numConstraintGroups; i++) {
-    if (
-      checkSinglePosition(_s._constraintMask[i], constraintCells[i])
-    ) {
+  for (int i = _numActiveConstraints; --i >= 0; ) {
+    if (checkSinglePosition(_s._constraintMask[i], constraintCells[i])) {
       return true; // Stuck
     }
   }
@@ -197,14 +195,34 @@ bool Solver::solve(int n) {
   return terminate;
 }
 
-bool Solver::solve() {
-  // Solve mode
-  _restore = false;
-  _numSolutionsToFind = 1;
+int Solver::findSolutions(bool restore, int numSolutionsToFind) {
+  _restore = restore;
+  _numSolutionsToFind = numSolutionsToFind;
 
   _numSolutionsFound = 0;
   _totalAutoSet = 0;
-  return solve(0);
+  _numActiveConstraints = (
+    _s.hyperConstraintsEnabled()
+    ? numConstraintGroups
+    : numBasicConstraintGroups
+  );
+
+  if (!setImplicitMasks()) {
+    if (!initialAutoSet()) {
+      solve(0);
+    }
+
+    if (restore) {
+      // Clear cells set by autoSet()
+      autoClear(_totalAutoSet);
+    }
+  }
+
+  return _numSolutionsFound;
+}
+
+bool Solver::solve() {
+  return (findSolutions(false, 1) == 1);
 }
 
 bool Solver::randomSolve() {
@@ -215,38 +233,10 @@ bool Solver::randomSolve() {
 }
 
 bool Solver::isSolvable() {
-  // Solve mode
-  _restore = true;
-  _numSolutionsToFind = 1;
-
-  _numSolutionsFound = 0;
-  _totalAutoSet = 0;
-  return solve(0);
+  return (findSolutions(true, 1) == 1);
 }
 
 SolutionCount Solver::countSolutions() {
-  // Solve mode
-  _restore = true;
-  _numSolutionsToFind = 2;
-
-  _numSolutionsFound = 0;
-  _totalAutoSet = 0;
-
-  if (setImplicitMasks()) {
-    return SolutionCount::None;
-  }
-
-  if (!initialAutoSet()) {
-    solve(0);
-  }
-  // Clear cells set by autoSet()
-  autoClear(_totalAutoSet);
-
-  switch (_numSolutionsFound) {
-    case 0: return SolutionCount::None;
-    case 1: return SolutionCount::One;
-    case 2: return SolutionCount::Multiple;
-    default: assertTrue(false); return SolutionCount::Multiple;
-  }
+  return (SolutionCount)findSolutions(true, 2);
 }
 
