@@ -27,4 +27,6 @@ const int maxBitValue = 1 << (numValues - 1);
 // The bit mask with bits for each value set
 const int maxBitMask = (1 << numValues) - 1;
 
+const int progressBarLen = 64;
+
 #endif

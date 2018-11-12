@@ -107,6 +107,7 @@ public:
   bool isSet(int x, int y);
   bool isSolved() { return _numFilled == numCells; }
   bool solveInProgress() { return _numFixed > 0 && _numFilled > _numFixed; }
+  int numFilled() { return _numFilled; }
 
   // Setters
   void setValue(int x, int y, int value);

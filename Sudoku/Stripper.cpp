@@ -10,6 +10,7 @@
 
 #include "Globals.h"
 #include "Utils.h"
+#include "Progress.h"
 
 Stripper::Stripper(Sudoku& sudoku, Solver& solver)
   : _s(sudoku), _solver(solver) {
@@ -57,6 +58,8 @@ void Stripper::clearIfOnlyPossiblePosition(SudokuCell& cell) {
 }
 
 void Stripper::strip1() {
+  signalPuzzleGenerationProgress(1, progressBarLen);
+
   for (int i = 0; i < numCells; i++) {
     SudokuCell& cell = _s.cellAt(_p[i]);
     if (cell.hasOnePossibleValue()) {
@@ -69,6 +72,10 @@ void Stripper::strip1() {
 }
 
 void Stripper::strip2() {
+  int numFilledAtStart = _s.numFilled();
+  int numClearAttempts = 0;
+  signalPuzzleGenerationProgress(2, 2 + numFilledAtStart);
+
   for (int i = 0; i < numCells; i++) {
     SudokuCell& cell = _s.cellAt(_p[i]);
     int bit0 = cell.getBitValue();
@@ -90,8 +97,13 @@ void Stripper::strip2() {
         // Restore cell to its original value
         _s.setBitValue(cell, bit0);
       }
+
+      numClearAttempts++;
+      signalPuzzleGenerationProgress(2 + numClearAttempts, 2 + numFilledAtStart);
     }
   }
+
+  signalPuzzleGenerationProgress(100, 100);
 }
 
 void Stripper::strip() {

@@ -10,6 +10,7 @@
 #include "Globals.h"
 #include "Drawing.h"
 #include "Store.h"
+#include "Progress.h"
 
 // Globals
 int cursorCol = 4;
@@ -44,29 +45,34 @@ void resetPuzzle() {
   sudoku.resetValues();
 }
 
-void generateNewPuzzle() {
+/* Initiates puzzle generation.
+ *
+ * As this takes several frames, it should not be executed as part of normal
+ * flow. It will invoke gb.update() periodically to show progress. However, it
+ * should not be relied upon that this is done often enough. Playing sounds may
+ * therefore be distorted and are therefore stopped.
+ */
+void startPuzzleGeneration() {
+  gb.sound.stop(0); // Stop any sound from playing (e.g. OK sound from menu)
+
   // Reset the puzzle
   sudoku.reset(sudoku.hyperConstraintsEnabled());
 
   // Solve it to generate a (random) solution
   assertTrue(solver.randomSolve());
-  sudoku.dump();
 
-#ifdef DEVELOPMENT_OLD
-  // Near solve
-  int i = 0;
-  while (sudoku.cellAt(i).isFixed()) {
-    i++;
-  }
-  sudoku.clearValue(sudoku.cellAt(i));
-#else
   // Now clear as many values as possible to create the actual puzzle
   stripper.randomStrip();
-#endif
 
   sudoku.fixValues();
   solutionCount = SolutionCount::One;
   editingPuzzle = false;
+}
+
+void generateNewPuzzle() {
+  // Initiate puzzle creation, but wait a few frames before generating puzzle,
+  // so OK sound is not (too) abruptly aborted
+  generateNewPuzzleCountdown = 8;
 }
 
 void createNewPuzzle() {
@@ -124,9 +130,7 @@ void mainMenu() {
       resetPuzzle();
       break;
     case 3:
-      // Initiate puzzle creation, but wait a few frames before generating puzzle,
-      // so OK sound is not (too) abruptly aborted
-      generateNewPuzzleCountdown = 2;
+      generateNewPuzzle();
       break;
     case 4:
       createNewPuzzle();
@@ -137,7 +141,7 @@ void mainMenu() {
       sudoku.reset(!sudoku.hyperConstraintsEnabled());
       if (!loadPuzzle(false)) {
         // No puzzle was auto-stored yet. Generate one.
-        generateNewPuzzleCountdown = 2;
+        generateNewPuzzle();
       }
       break;
   }
@@ -267,13 +271,10 @@ void loop() {
     generateNewPuzzleCountdown--;
 
     if (generateNewPuzzleCountdown == 0) {
-      gb.sound.stop(0); // Stop OK sound from menu
-      generateNewPuzzle();
+      startPuzzleGeneration();
+    } else {
+      signalPuzzleGenerationProgress(0, 100);
     }
-
-    gb.display.setCursor(6, 28);
-    gb.display.setColor(WHITE);
-    gb.display.println("Generating puzzle");
   }
   else {
     draw(sudoku);
