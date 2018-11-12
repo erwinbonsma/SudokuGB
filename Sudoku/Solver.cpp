@@ -43,21 +43,20 @@ bool Solver::checkSingleValue(int cellIndex) {
 }
 
 bool Solver::checkSinglePosition(int mask, int* cellIndices) {
-  for (int bit = 1; bit <= maxBitValue; bit *= 2) {
+  for (int bit = maxBitValue; bit > 0; bit >>= 1) {
     if ((mask & bit) != 0) {
       // Value not yet set in given group. Check possible positions
 
-      int i = 0;
+      int i = constraintGroupSize;
       int cnt = 0;
       int posIndex = -1;
-      while (i < constraintGroupSize && cnt < 2) {
+      while (--i >= 0 && cnt < 2) {
         int ci = cellIndices[i];
         SudokuCell& cell = _s.cellAt(ci);
         if (!cell.isSet() && cell.isBitPossible(bit)) {
           posIndex = ci;
           cnt++;
         }
-        i++;
       }
       if (cnt == 0) {
         return true;
@@ -74,10 +73,10 @@ bool Solver::checkSinglePosition(int mask, int* cellIndices) {
 }
 
 bool Solver::postSet(SudokuCell& cell) {
-  for (int i = 0; i < maxConstraintsPerCell; i++) {
+  for (int i = maxConstraintsPerCell; --i >= 0; ) {
     int groupIndex = cell._constraintGroup[i];
     int* cellIndices = constraintCells[groupIndex];
-    for (int j = 0; j < constraintGroupSize; j++) {
+    for (int j = constraintGroupSize; --j >= 0; ) {
       if (checkSingleValue(cellIndices[j])) {
         return true; // Stuck
       }
@@ -101,7 +100,7 @@ bool Solver::setImplicitMasks() {
   for (int i = numExplicitConstraintGroups; i < numConstraintGroups; i++) {
     int m = maxBitMask;
     int* cellIndices = constraintCells[i];
-    for (int j = 0; j < constraintGroupSize; j++) {
+    for (int j = constraintGroupSize; --j >= 0; ) {
       int val = _s.cellAt(cellIndices[j]).getBitValue();
       if (val > 0) {
         if ((m & val) != 0) {
@@ -121,7 +120,7 @@ bool Solver::setImplicitMasks() {
 
 bool Solver::initialAutoSet() {
   // Check if each cell still has possible values
-  for (int i = 0; i < numCells; i++) {
+  for (int i = numCells; --i >= 0; ) {
     if (checkSingleValue(i)) {
       return true; // Stuck
     }
@@ -149,11 +148,11 @@ bool Solver::solve(int n) {
     return solve(n + 1);
   }
 
-  int i = 0;
+  int i = numValues;
   bool terminate = false;
   int totalAutoSetBefore = _totalAutoSet;
   int bit = 1 << _offsets[n];
-  while (i < numValues && !terminate) {
+  while (--i >= 0 && !terminate) {
     if (cell.isBitPossible(bit)) {
       _s.setBitValue(cell, bit);
 
@@ -173,10 +172,9 @@ bool Solver::solve(int n) {
       _s.clearValue(cell);
     }
 
-    i++;
-    bit <<= 1;
-    if (bit > maxBitValue) {
-      bit = 1;
+    bit >>= 1;
+    if (bit == 0) {
+      bit = maxBitValue;
     }
   }
 
@@ -214,7 +212,7 @@ bool Solver::solve() {
 }
 
 bool Solver::randomSolve() {
-  for (int i = 0; i < numCells; i++) {
+  for (int i = numCells; --i >= 0; ) {
     _offsets[i] = rand() % numValues;
   }
   return solve();
