@@ -39,11 +39,15 @@ protected:
   int bitMask(bool applyLastConstraint);
 
   /* Mask that indicates what (bit) values are allowed.
+   *
+   * Note: It is only valid when the cell is not yet set.
    */
   int allowedBitMask() { return bitMask(_allowedUsesLastConstraint); }
 
   /* Mask that indicates what (bit) values are possible. This can be fewer than
    * are allowed when the cell is part of an implicit hyper-box.
+   *
+   * Note: It is only valid when the cell is not yet set.
    */
   int possibleBitMask() { return bitMask(_possibleUsesLastConstraint); }
 

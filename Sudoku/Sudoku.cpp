@@ -158,12 +158,14 @@ bool SudokuCell::isBitPossible(int bit) {
 }
 
 bool SudokuCell::hasOneAllowedValue() {
+  assertTrue(_value == 0);
   int m = allowedBitMask();
   // Note: x & (x - 1) clears the right-most bit
   return (m & (m - 1)) == 0;
 }
 
 bool SudokuCell::hasOnePossibleValue() {
+  assertTrue(_value == 0);
   int m = possibleBitMask();
   // Note: x & (x - 1) clears the right-most bit
   return (m & (m - 1)) == 0;
