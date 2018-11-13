@@ -69,10 +69,16 @@ void startPuzzleGeneration() {
   editingPuzzle = false;
 }
 
-void generateNewPuzzle() {
-  // Initiate puzzle creation, but wait a few frames before generating puzzle,
-  // so OK sound is not (too) abruptly aborted
-  generateNewPuzzleCountdown = 8;
+void generateNewPuzzle(bool delay) {
+  if (delay) {
+    // Initiate puzzle creation, but wait a few frames before generating puzzle,
+    // so OK sound is not (too) abruptly aborted
+    generateNewPuzzleCountdown = 8;
+  } else {
+    // Trigger puzzle generation in 2nd frame. This way generate message is
+    // still shown first
+    generateNewPuzzleCountdown = 2;
+  }
 }
 
 void createNewPuzzle() {
@@ -130,7 +136,7 @@ void mainMenu() {
       resetPuzzle();
       break;
     case 3:
-      generateNewPuzzle();
+      generateNewPuzzle(true);
       break;
     case 4:
       createNewPuzzle();
@@ -141,7 +147,7 @@ void mainMenu() {
       sudoku.reset(!sudoku.hyperConstraintsEnabled());
       if (!loadPuzzle(false)) {
         // No puzzle was auto-stored yet. Generate one.
-        generateNewPuzzle();
+        generateNewPuzzle(true);
       }
       break;
   }
@@ -257,9 +263,7 @@ void setup() {
   initConstraintTables();
   sudoku.init();
 
-  // Trigger puzzle generation in 2nd frame. This way generate message is still
-  // shown first
-  generateNewPuzzleCountdown = 2;
+  generateNewPuzzle(false);
 }
 
 void loop() {
