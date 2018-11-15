@@ -11,6 +11,7 @@
 #include "Drawing.h"
 #include "Store.h"
 #include "Progress.h"
+#include "Strings.h"
 
 // Globals
 int cursorCol = 4;
@@ -89,47 +90,41 @@ void createNewPuzzle() {
   editingPuzzle = true;
 }
 
-#define MAX_MENU_ENTRIES 7
-const char* menuItem_Back = "Return";
-const char* menuItem_Save = "Save puzzle";
-const char* menuItem_Load = "Load puzzle";
-const char* menuItem_Reset = "Reset puzzle";
-const char* menuItem_New = "New puzzle";
-const char* menuItem_Create = "Create puzzle";
-const char* menuItem_EnableHyper = "Enable hyper mode";
-const char* menuItem_DisableHyper = "Disable hyper mode";
-
-const char* menuEntries[MAX_MENU_ENTRIES];
+#define NUM_MENU_ENTRIES 7
+const char* menuEntries[NUM_MENU_ENTRIES];
 
 int initMenuEntries() {
   int i = 0;
-  menuEntries[i++] = menuItem_Save;
-  menuEntries[i++] = menuItem_Load;
-  menuEntries[i++] = menuItem_Reset;
-  menuEntries[i++] = menuItem_New;
-  menuEntries[i++] = menuItem_Create;
+  int langIndex = getLanguageIndex();
+
+  while (i < 5) {
+    menuEntries[i] = menuStrings[i][langIndex];
+    i++;
+  }
   menuEntries[i++] = (
     sudoku.hyperConstraintsEnabled()
-    ? menuItem_DisableHyper
-    : menuItem_EnableHyper
-  );
-  menuEntries[i++] = menuItem_Back;
+    ? menuStrings[6]
+    : menuStrings[5]
+  )[langIndex];
+  menuEntries[i++] = menuStrings[7][langIndex];
   return i;
 }
 
 void mainMenu() {
   int numItems = initMenuEntries();
-  uint8_t entry = gb.gui.menu("Main menu", menuEntries, numItems);
+  uint8_t entry = gb.gui.menu(
+    menuTitle[getLanguageIndex()], menuEntries, numItems
+  );
 
   switch (entry) {
     case 0:
       if (storePuzzle(true)) {
-        gb.gui.popup("Puzzle saved", 40);
+        gb.gui.popup(puzzleSaved, 40);
       }
       break;
     case 1:
       if (!loadPuzzle(true)) {
-        gb.gui.popup("Load failed", 40);
+        gb.gui.popup(loadFailed, 40);
       }
       break;
     case 2:
