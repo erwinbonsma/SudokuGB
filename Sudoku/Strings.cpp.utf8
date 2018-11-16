@@ -15,16 +15,16 @@
 const char* menuStrings[NUM_MENU_STRINGS][NUM_LANG] {
   { "Save puzzle", "Sauver le puzzle" },
   { "Load puzzle", "Charger le puzzle" },
-  { "Reset puzzle", "Réinitialiser" },
+  { "Reset puzzle", "Recommencer" },
   { "New puzzle", "Nouveau puzzle" },
   { "Create puzzle", "Créer un puzzle" },
-  { "Enable hyper mode", "Activer hyper" },
-  { "Disable hyper mode", "Désactiver hyper" },
-  { "Return", "Retour" }
+  { "Enable hyper mode", "Mode hyper actif" },
+  { "Disable hyper mode", "Mode hyper inactif" },
+  { "Return", "Revenir au puzzle" }
 };
 
 const char* menuTitle[NUM_LANG] = {
-  "Main menu", "Menu principal"
+  "SUDOKU by eriban", "SUDOKU par eriban"
 };
 
 const MultiLang puzzleSaved[NUM_LANG] {
@@ -34,12 +34,12 @@ const MultiLang puzzleSaved[NUM_LANG] {
 
 const MultiLang loadFailed[NUM_LANG] {
   { LANG_EN, "Load failed" },
-  { LANG_FR, "Chargement raté" }
+  { LANG_FR, "Echec du chargement" }
 };
 
 const MultiLang generatingPuzzle[NUM_LANG] {
   { LANG_EN, "Generating puzzle" },
-  { LANG_FR, "Nouveau puzzle" }
+  { LANG_FR, "Création du puzzle" }
 };
 
 int getLanguageIndex() {
