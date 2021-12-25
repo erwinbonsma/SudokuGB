@@ -9,11 +9,13 @@
 #include "Progress.h"
 
 #include "Constants.h"
+#include "Strings.h"
 
 void drawPuzzleGenerationProgress(int numSteps, int maxSteps) {
-  gb.display.setCursor(6, 26);
+  const char* text = gb.language.get(generatingPuzzle);
+  gb.display.setCursor(40 - 2 * strlen(text), 26);
   gb.display.setColor(WHITE);
-  gb.display.println("Generating puzzle");
+  gb.display.println(text);
 
   int progressLen = (progressBarLen * numSteps) / maxSteps;
   gb.display.setColor(GRAY);
